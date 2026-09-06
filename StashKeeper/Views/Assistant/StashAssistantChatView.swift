@@ -17,6 +17,7 @@ struct StashAssistantChatView: View {
 
     @Query private var allItems: [StashItem]
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @State private var messages: [StashChatMessage] = []
     @State private var draftText: String = ""
@@ -208,7 +209,7 @@ struct StashAssistantChatView: View {
 
         Task {
             do {
-                let reply = try await StashAssistantService.shared.send(text, items: allItems)
+                let reply = try await StashAssistantService.shared.send(text, items: allItems, modelContext: modelContext)
                 if StashAssistantService.shared.lastResponseWasHeuristic {
                     withAnimation(.stashSpring) { showingHeuristicNotice = true }
                 }

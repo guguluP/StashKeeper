@@ -72,7 +72,14 @@ final class RecipeSuggestionService {
     /// is available at all (there's no meaningful heuristic fallback for
     /// "invent a recipe," unlike item naming).
     func suggestRecipes(for analyses: [ItemAnalysis], fitnessContext: FitnessContext?) async -> [RecipeSuggestion] {
-        let (model, _) = PreferredModelRouter.resolve(preferCloud: false)
+        let (model, _) = PreferredModelRouter.resolve(
+            preferCloud: false,
+            useCase: .general
+        )
+        guard PreferredModelRouter.onDeviceModel(for: .general).isAvailable
+                || PreferredModelRouter.isPrivateCloudComputeAvailable else {
+            return []
+        }
 
         let produceNames = analyses
             .filter { analysis in
@@ -116,10 +123,11 @@ final class RecipeSuggestionService {
 
         do {
             let session = LanguageModelSession(model: model, instructions: instructions)
+            session.prewarm()
             let response = try await session.respond(
                 to: prompt,
                 generating: RecipeSuggestionBatch.self,
-                options: GenerationOptions(temperature: 0.7)
+                options: GenerationOptions(temperature: 0.7, maximumResponseTokens: 1536)
             )
             return response.content.suggestions
         } catch {
@@ -140,9 +148,16 @@ final class RecipeSuggestionService {
         items: [StashItem],
         fitnessContext: FitnessContext?
     ) async -> [RecipeSuggestion] {
-        let (model, _) = PreferredModelRouter.resolve(preferCloud: false)
+        let (model, _) = PreferredModelRouter.resolve(
+            preferCloud: false,
+            useCase: .general
+        )
 
         guard !items.isEmpty else { return [] }
+        guard PreferredModelRouter.onDeviceModel(for: .general).isAvailable
+                || PreferredModelRouter.isPrivateCloudComputeAvailable else {
+            return []
+        }
 
         let instructions = Instructions {
             """
@@ -186,10 +201,15 @@ final class RecipeSuggestionService {
                 tools: [InventoryLookupTool(items: items)],
                 instructions: instructions
             )
+            session.prewarm()
             let response = try await session.respond(
                 to: prompt,
                 generating: RecipeSuggestionBatch.self,
-                options: GenerationOptions(temperature: 0.7)
+                options: GenerationOptions(
+                    temperature: 0.7,
+                    maximumResponseTokens: 1536,
+                    toolCallingMode: .allowed
+                )
             )
             return response.content.suggestions
         } catch {

@@ -80,10 +80,12 @@ struct ReceiptScanView: View {
             #if os(iOS)
             .fullScreenCover(item: activeItemBinding) { prefill in
                 AddItemFlowView(receiptItemHint: prefill)
+                    .sheetPopIn()
             }
             #else
             .sheet(item: activeItemBinding) { prefill in
                 AddItemFlowView(receiptItemHint: prefill)
+                    .sheetPopIn()
             }
             #endif
         }

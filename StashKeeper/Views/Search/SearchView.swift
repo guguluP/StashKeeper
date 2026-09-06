@@ -150,7 +150,7 @@ struct SearchView: View {
 
     private func debounceInterpret(_ text: String) {
         searchTask?.cancel()
-        guard !text.isEmpty, ItemIntelligenceService.shared.isAvailable else {
+        guard !text.isEmpty, ItemIntelligenceService.shared.isAvailableViaAnyTier else {
             lastIntent = nil
             return
         }

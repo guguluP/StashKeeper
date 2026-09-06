@@ -153,6 +153,7 @@ struct AddItemFlowView: View {
             }
             .sheet(isPresented: $showingRecipeSuggestions) {
                 RecipeSuggestionsSheet(suggestions: recipeSuggestions)
+                    .sheetPopIn()
             }
             #if os(iOS)
             .fullScreenCover(isPresented: $showingCamera) {
@@ -169,6 +170,7 @@ struct AddItemFlowView: View {
         }
         .sheet(item: editingCandidateBinding) { editing in
             candidateEditSheet(sourceIndex: editing.sourceIndex, candidateIndex: editing.candidateIndex)
+                .sheetPopIn()
         }
     }
 
@@ -338,7 +340,8 @@ struct AddItemFlowView: View {
                         globalRecognizedText: observations.globalRecognizedText,
                         existingLocationNames: locations.map(\.name),
                         existingItems: existingItems,
-                        expectedItemHint: receiptItemHint?.promptDescription
+                        expectedItemHint: receiptItemHint?.promptDescription,
+                        sourceImageData: imageData
                     )
                     usedHeuristicFallback = ItemIntelligenceService.shared.lastUsedTier == .heuristicOnly
                 } catch {
@@ -695,10 +698,20 @@ struct AddItemFlowView: View {
     }
 
     private func candidateEditSheet(sourceIndex: Int, candidateIndex: Int) -> some View {
+        guard sourceResults.indices.contains(sourceIndex),
+              sourceResults[sourceIndex].candidates.indices.contains(candidateIndex) else {
+            return AnyView(
+                Text("This item is no longer available.")
+                    .foregroundStyle(.secondary)
+                    .padding()
+                    .onAppear { editingCandidate = nil }
+            )
+        }
+
         let candidate = sourceResults[sourceIndex].candidates[candidateIndex]
         let candidateID = candidate.id
 
-        return ItemCandidateEditView(
+        return AnyView(ItemCandidateEditView(
             analysis: Binding(
                 get: { sourceResults[sourceIndex].candidates[candidateIndex].analysis },
                 set: { sourceResults[sourceIndex].candidates[candidateIndex].analysis = $0 }
@@ -726,7 +739,7 @@ struct AddItemFlowView: View {
             barcodePayload: barcodeByCandidate[candidateID] ?? nil,
             barcodeLookupSource: barcodeSourceByCandidate[candidateID] ?? nil,
             recognizedText: recognizedTextByCandidate[candidateID] ?? []
-        )
+        ))
     }
 
     // MARK: - Failure fallback

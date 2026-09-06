@@ -66,24 +66,28 @@ final class ReceiptScanService {
             throw ReceiptScanError.noTextFound
         }
 
-        let (model, tier) = PreferredModelRouter.resolve(preferCloud: false)
-        let onDeviceAvailable: Bool = {
-            if case .available = SystemLanguageModel.default.availability { return true }
-            return false
-        }()
-        guard onDeviceAvailable || PrivateCloudComputeLanguageModel().isAvailable else {
+        // Never touch PrivateCloudComputeLanguageModel without the
+        // entitlement-safe helper — direct construction can fatal-trap.
+        let onDeviceReady = PreferredModelRouter.onDeviceModel(for: .contentTagging).isAvailable
+        guard onDeviceReady || PreferredModelRouter.isPrivateCloudComputeAvailable else {
             lastExtractionWasHeuristic = true
             return ReceiptHeuristicParser.parse(orderedLines)
         }
 
+        let (model, tier) = PreferredModelRouter.resolve(
+            preferCloud: false,
+            useCase: .contentTagging
+        )
+
         let instructions = Instructions {
             """
-            You extract individual purchased line items from OCR text read
-            off a photographed supermarket/retail receipt. The text is
-            given to you top-to-bottom in the order it was printed, but OCR
-            is imperfect — lines may be split oddly, have misread
-            characters, or run together. Use your judgment to reconstruct
-            sensible item rows from this noisy text.
+            You extract individual purchased line items from a photographed
+            supermarket/retail receipt. You may receive both the raw OCR
+            text (top-to-bottom reading order) and, when available, the
+            receipt photo itself. OCR is imperfect — lines may be split
+            oddly, have misread characters, or run together. Use your
+            judgment (and the photo when attached) to reconstruct sensible
+            item rows from this noisy input.
 
             Only extract actual purchased products. Skip subtotal, tax
             (GST/VAT), discount, rounding, total, change, payment method,
@@ -93,18 +97,32 @@ final class ReceiptScanService {
         }
 
         let linesText = orderedLines.map(\.text).joined(separator: "\n")
+        let receiptPhoto = AFMImageSupport.modelSupportsVision(model)
+            ? AFMImageSupport.attachment(from: imageData)
+            : nil
+
         let prompt = Prompt {
             """
-            Parse this receipt OCR text into structured line items:
+            Parse this receipt into structured line items.
 
+            OCR text (top-to-bottom):
             \(linesText)
             """
+            if let receiptPhoto {
+                "Receipt photo (use to correct OCR mistakes and recover missed lines):"
+                receiptPhoto
+            }
         }
 
-        let options = GenerationOptions(temperature: 0.2)
+        let options = GenerationOptions(
+            samplingMode: .greedy,
+            temperature: 0.2,
+            maximumResponseTokens: 2048
+        )
 
         do {
             let session = LanguageModelSession(model: model, instructions: instructions)
+            session.prewarm()
             let response = try await session.respond(
                 to: prompt,
                 generating: ReceiptExtraction.self,
@@ -113,16 +131,21 @@ final class ReceiptScanService {
             lastExtractionWasHeuristic = false
             return response.content
         } catch {
-            // One retry escalating tier, mirroring analyzeRegions' retry
-            // shape, before falling back to the heuristic parser rather
-            // than surfacing a dead end to the user.
-            let (retryModel, _) = PreferredModelRouter.resolve(preferCloud: tier != .privateCloudCompute)
+            let (retryModel, _) = PreferredModelRouter.resolve(
+                preferCloud: tier != .privateCloudCompute,
+                useCase: .contentTagging
+            )
             do {
                 let retrySession = LanguageModelSession(model: retryModel, instructions: instructions)
+                retrySession.prewarm()
                 let response = try await retrySession.respond(
                     to: prompt,
                     generating: ReceiptExtraction.self,
-                    options: GenerationOptions(temperature: 0.1)
+                    options: GenerationOptions(
+                        samplingMode: .greedy,
+                        temperature: 0.1,
+                        maximumResponseTokens: 2048
+                    )
                 )
                 lastExtractionWasHeuristic = false
                 return response.content

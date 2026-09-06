@@ -173,3 +173,56 @@ extension View {
             .animation(.stashSpring.delay(Double(index) * baseDelay), value: isVisible)
     }
 }
+
+// MARK: - Sheet/cover entrance animation
+
+/// A gentle scale + fade + rise applied to a sheet or full-screen cover's
+/// root content the moment it appears, so presented windows feel like they
+/// pop into place rather than the system's flat default fade. SwiftUI
+/// already animates the sheet container's slide-up; this additionally
+/// animates the *content inside* on a slightly independent, springier
+/// curve, which is what actually reads as "alive" — the container motion
+/// alone looks mechanical without it.
+///
+/// Applied via `.sheetPopIn()` at the root of each sheet/fullScreenCover's
+/// content closure, e.g.:
+/// ```
+/// .sheet(isPresented: $showing) {
+///     SomeView().sheetPopIn()
+/// }
+/// ```
+struct SheetPopInModifier: ViewModifier {
+    @State private var hasAppeared = false
+
+    /// Slightly different starting scale/offset per call site would be
+    /// overkill; one consistent, subtle motion reads as intentional across
+    /// the whole app rather than each sheet doing its own thing.
+    private let startScale: CGFloat = 0.94
+    private let startOffsetY: CGFloat = 16
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(hasAppeared ? 1 : startScale)
+            .offset(y: hasAppeared ? 0 : startOffsetY)
+            .opacity(hasAppeared ? 1 : 0)
+            .onAppear {
+                // A tiny delay lets the sheet's own presentation transition
+                // begin first so this doesn't fight the system animation —
+                // without it the two motions visibly stutter against each
+                // other for a frame.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+                        hasAppeared = true
+                    }
+                }
+            }
+    }
+}
+
+extension View {
+    /// See `SheetPopInModifier`. Apply at the root of a sheet/cover's
+    /// content view.
+    func sheetPopIn() -> some View {
+        modifier(SheetPopInModifier())
+    }
+}

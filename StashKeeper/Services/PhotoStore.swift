@@ -34,7 +34,18 @@ enum PhotoStore {
 
     /// Preferred location: App Group so all targets share photos.
     /// Fallback: per-app Application Support (pre-App-Group installs / missing entitlement).
+    ///
+    /// Gated behind the same `useAppGroupContainer` flag as
+    /// `SharedModelConfiguration` — calling
+    /// `containerURL(forSecurityApplicationGroupIdentifier:)` for a group ID
+    /// that isn't actually present in the installed provisioning profile
+    /// isn't guaranteed to just return nil; on a sandboxed app it can raise
+    /// the same kind of uncatchable abort as the ModelContainer path. Only
+    /// attempt it once the App Group is genuinely provisioned.
     private static func preferredPhotosDirectory() -> URL {
+        guard SharedModelConfiguration.useAppGroupContainer else {
+            return legacyPhotosDirectory
+        }
         if let groupURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: SharedModelConfiguration.appGroupIdentifier
         ) {

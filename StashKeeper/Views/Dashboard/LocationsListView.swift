@@ -48,6 +48,7 @@ struct LocationsListView: View {
         }
         .sheet(isPresented: $showingAddLocation) {
             AddLocationSheet()
+                .sheetPopIn()
         }
         .overlay {
             if locations.isEmpty {

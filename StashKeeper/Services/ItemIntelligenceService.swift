@@ -22,8 +22,10 @@
 //    attempt fails, before falling back to manual entry.
 //
 
+import CoreGraphics
 import Foundation
 import FoundationModels
+import ImageIO
 
 enum ItemIntelligenceError: Error, LocalizedError {
     case modelUnavailable(SystemLanguageModel.Availability.UnavailableReason)
@@ -194,55 +196,192 @@ enum HeuristicItemNamer {
     }
 }
 
+/// Which specialized on-device SystemLanguageModel use-case a task needs.
+/// Apple ships two public use cases:
+/// - `.contentTagging` — optimized for classification, tagging, and
+///   structured extraction (item analysis, search intent, receipt lines).
+/// - `.general` — open-ended conversation / generation (chat, recipes).
+enum AFMUseCase: Sendable, Equatable {
+    case contentTagging
+    case general
+
+    var systemUseCase: SystemLanguageModel.UseCase {
+        switch self {
+        case .contentTagging: return .contentTagging
+        case .general: return .general
+        }
+    }
+}
+
+/// Shared helpers for feeding photos into Foundation Models' multimodal
+/// path (`Attachment` / vision capability). Downscales crops so a multi-item
+/// batch does not blow the on-device context window.
+enum AFMImageSupport {
+    /// Max long-edge for region crops attached to a prompt. Large enough for
+    /// packaging text and produce color, small enough for several crops.
+    static let maxRegionDimension: CGFloat = 512
+    /// Full-frame attachments (receipts) can be a bit larger.
+    static let maxFullFrameDimension: CGFloat = 768
+
+    static func loadCGImage(from data: Data) -> (image: CGImage, orientation: CGImagePropertyOrientation)? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            return nil
+        }
+        var orientation = CGImagePropertyOrientation.up
+        if let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let raw = props[kCGImagePropertyOrientation] as? UInt32,
+           let parsed = CGImagePropertyOrientation(rawValue: raw) {
+            orientation = parsed
+        }
+        return (cgImage, orientation)
+    }
+
+    /// Vision-space normalized rect (origin bottom-left) → pixel crop.
+    static func crop(
+        _ cgImage: CGImage,
+        normalizedRect: CGRect,
+        marginFraction: CGFloat = 0.06
+    ) -> CGImage? {
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        var rect = CGRect(
+            x: normalizedRect.origin.x * width,
+            y: (1 - normalizedRect.origin.y - normalizedRect.height) * height,
+            width: normalizedRect.width * width,
+            height: normalizedRect.height * height
+        )
+        let marginX = rect.width * marginFraction
+        let marginY = rect.height * marginFraction
+        rect = rect.insetBy(dx: -marginX, dy: -marginY)
+        rect = rect.intersection(CGRect(x: 0, y: 0, width: width, height: height))
+        guard rect.width > 1, rect.height > 1 else { return cgImage }
+        return cgImage.cropping(to: rect)
+    }
+
+    static func downscale(_ image: CGImage, maxDimension: CGFloat) -> CGImage {
+        let w = CGFloat(image.width)
+        let h = CGFloat(image.height)
+        let longest = max(w, h)
+        guard longest > maxDimension else { return image }
+        let scale = maxDimension / longest
+        let targetW = max(1, Int((w * scale).rounded()))
+        let targetH = max(1, Int((h * scale).rounded()))
+        guard let context = CGContext(
+            data: nil,
+            width: targetW,
+            height: targetH,
+            bitsPerComponent: image.bitsPerComponent,
+            bytesPerRow: 0,
+            space: image.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: image.bitmapInfo.rawValue
+        ) else {
+            return image
+        }
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(x: 0, y: 0, width: targetW, height: targetH))
+        return context.makeImage() ?? image
+    }
+
+    static func attachment(
+        from data: Data,
+        maxDimension: CGFloat = maxFullFrameDimension
+    ) -> Attachment<ImageAttachmentContent>? {
+        guard let loaded = loadCGImage(from: data) else { return nil }
+        let scaled = downscale(loaded.image, maxDimension: maxDimension)
+        return Attachment(scaled, orientation: loaded.orientation)
+    }
+
+    static func regionAttachment(
+        fullImageData: Data,
+        normalizedRect: CGRect
+    ) -> Attachment<ImageAttachmentContent>? {
+        guard let loaded = loadCGImage(from: fullImageData),
+              let cropped = crop(loaded.image, normalizedRect: normalizedRect) else {
+            return nil
+        }
+        let scaled = downscale(cropped, maxDimension: maxRegionDimension)
+        return Attachment(scaled, orientation: loaded.orientation)
+    }
+
+    static func modelSupportsVision(_ model: some LanguageModel) -> Bool {
+        model.capabilities.contains(.vision)
+    }
+}
+
 /// Routes each request to the on-device model first (free, private,
 /// offline, no per-request limit) and only escalates to
-/// `PrivateCloudComputeLanguageModel` — Apple's free-for-small-developers
-/// server model introduced alongside the unified `LanguageModel` protocol —
-/// when the on-device model is unavailable (Apple Intelligence off, model
-/// still downloading, device ineligible) or when a task is explicitly
-/// marked as needing PCC's larger context/reasoning (batch analysis of
-/// many regions at once, which can exceed the on-device model's smaller
-/// context window).
+/// `PrivateCloudComputeLanguageModel` when the on-device model is unavailable
+/// or when a task is explicitly marked as needing PCC's larger
+/// context/reasoning (large multi-region batches).
 ///
-/// This indirection exists so the rest of the service can build a session
-/// with `PreferredModelRouter.resolve(preferCloud:)` without scattering
-/// availability checks and PCC-specific fallback logic across every call
-/// site. PCC eligibility (App Store Small Business Program, under the
-/// download threshold, entitlement present) and runtime conditions
-/// (network reachable, under the user's daily limit) are all reflected in
-/// `PrivateCloudComputeLanguageModel.isAvailable`; when it's false for any
-/// reason, this quietly falls back to the on-device model rather than
-/// erroring — PCC is a bonus tier, never a hard requirement, so a missing
-/// entitlement or an offline device should never be a user-facing failure
-/// on its own.
+/// Always picks a specialized `SystemLanguageModel` use case (content tagging
+/// vs general) instead of the untyped `.default` singleton, and never
+/// constructs PCC without confirming the entitlement is present.
 @MainActor
 enum PreferredModelRouter {
-    /// Resolves which model + tier to actually use for a request.
-    /// `preferCloud` is a hint (not a guarantee) from the call site that
-    /// this particular task benefits from PCC's larger context/reasoning;
-    /// it's still gated by on-device-first logic and real availability.
-    static func resolve(preferCloud: Bool) -> (model: any LanguageModel, tier: ModelTier) {
-        let onDevice = SystemLanguageModel.default
 
-        // On-device is always tried first when it's actually ready — it's
-        // free, private, offline, and has no daily request limit, so there's
-        // no reason to spend the user's PCC quota on a task the small model
-        // already handles well.
-        if case .available = onDevice.availability, !preferCloud {
+    /// Whether this build is provisioned for Private Cloud Compute.
+    /// Inspects `embedded.mobileprovision` (the real on-device filename —
+    /// not `embedded.provisionprofile`, which never exists and previously
+    /// made this check always fail). Constructing `PrivateCloudComputeLanguageModel`
+    /// without the entitlement can fatal-trap, so this must run first.
+    static let isProvisionedForPrivateCloudCompute: Bool = {
+        let candidates: [URL?] = [
+            Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+            Bundle.main.bundleURL.appendingPathComponent("embedded.mobileprovision"),
+            Bundle.main.bundleURL
+                .appendingPathComponent("Contents")
+                .appendingPathComponent("embedded.mobileprovision")
+        ]
+        for url in candidates.compactMap({ $0 }) {
+            guard let data = try? Data(contentsOf: url),
+                  let text = String(data: data, encoding: .isoLatin1) else {
+                continue
+            }
+            if text.contains("com.apple.developer.private-cloud-compute") {
+                return true
+            }
+        }
+        return false
+    }()
+
+    /// Safe PCC availability: never constructs the type without entitlement.
+    static var isPrivateCloudComputeAvailable: Bool {
+        guard isProvisionedForPrivateCloudCompute else { return false }
+        return PrivateCloudComputeLanguageModel().isAvailable
+    }
+
+    /// On-device model for a specialized use case.
+    static func onDeviceModel(for useCase: AFMUseCase) -> SystemLanguageModel {
+        SystemLanguageModel(useCase: useCase.systemUseCase, guardrails: .default)
+    }
+
+    /// Resolves which model + tier to use.
+    /// `preferCloud` is a hint that this task benefits from PCC; still gated
+    /// by real availability and on-device-first preference.
+    static func resolve(
+        preferCloud: Bool,
+        useCase: AFMUseCase = .general
+    ) -> (model: any LanguageModel, tier: ModelTier) {
+        let onDevice = onDeviceModel(for: useCase)
+
+        if !preferCloud, onDevice.isAvailable {
             return (onDevice, .onDevice)
         }
 
-        let cloudModel = PrivateCloudComputeLanguageModel()
-        if cloudModel.isAvailable {
-            return (cloudModel, .privateCloudCompute)
+        if isPrivateCloudComputeAvailable {
+            return (PrivateCloudComputeLanguageModel(), .privateCloudCompute)
         }
 
-        // Cloud unavailable (ineligible app, no entitlement, offline, over
-        // the daily per-user limit) — fall back to on-device even if it's
-        // the less-preferred choice for this task, since a degraded answer
-        // beats no answer. Callers still check `onDevice.availability`
-        // themselves for the "nothing works at all" case and show the
-        // appropriate manual-entry fallback.
+        // Prefer on-device even when preferCloud was set, if it is ready.
+        if onDevice.isAvailable {
+            return (onDevice, .onDevice)
+        }
+
+        // Last resort: still return the specialized on-device model so callers
+        // that already gated on isAvailableViaAnyTier have a concrete handle;
+        // generation will fail cleanly rather than using the wrong use case.
         return (onDevice, .onDevice)
     }
 }
@@ -252,53 +391,33 @@ final class ItemIntelligenceService {
 
     static let shared = ItemIntelligenceService()
 
-    private let model = SystemLanguageModel.default
+    /// Specialized on-device models — never use the bare `.default` singleton
+    /// for task-specific work. Content tagging is the right use case for
+    /// structured catalog extraction; general is reserved for open chat.
+    private let taggingModel = PreferredModelRouter.onDeviceModel(for: .contentTagging)
+    private let generalModel = PreferredModelRouter.onDeviceModel(for: .general)
 
-    /// Warm sessions kept alive across calls within an app session, keyed by
-    /// task type, so instructions aren't rebuilt/reparsed on every single
-    /// photo analyzed or search performed. Recreated only if the model's
-    /// availability changes (e.g. Apple Intelligence toggled mid-session)
-    /// or if a session enters an errored state.
-    private var analysisSession: LanguageModelSession?
+    /// Search sessions stay warm (text-only, multi-turn friendly). Analysis
+    /// sessions are intentionally NOT cached across photos: multimodal
+    /// image attachments would accumulate in the transcript and blow the
+    /// context window after a few captures. Each analysis call gets a
+    /// fresh session + `prewarm()` instead.
     private var searchSession: LanguageModelSession?
 
-    /// Item count the currently-cached sessions' inventory tool was built
-    /// with. A warm session's Tool captures a snapshot at construction
-    /// time, so if the inventory has changed since (new items saved,
-    /// items deleted) since we last built a session, the cached session's
-    /// tool would silently serve stale data. Tracking the count lets us
-    /// detect drift without requiring every call site to remember to call
-    /// invalidateSessions() — a cheap, good-enough staleness check since
-    /// exact content changes (edits without count changes) are rarer and
-    /// lower-stakes for this tool's purpose (duplicate/grounding checks).
-    private var analysisSessionItemCount: Int = -1
     private var searchSessionItemCount: Int = -1
-    private var analysisSessionFingerprint: Int = 0
     private var searchSessionFingerprint: Int = 0
-    /// Tier the currently-cached session was built against — tracked
-    /// alongside item count so a session built for one tier isn't silently
-    /// reused when a later call prefers (or requires, due to availability
-    /// changing mid-session) a different tier.
-    private var analysisSessionTier: ModelTier?
     private var searchSessionTier: ModelTier?
 
-    var availability: SystemLanguageModel.Availability { model.availability }
+    var availability: SystemLanguageModel.Availability { taggingModel.availability }
 
-    /// Whether Apple Intelligence is ready to use right now.
-    var isAvailable: Bool {
-        if case .available = model.availability { return true }
-        return false
-    }
+    /// Whether on-device Apple Intelligence is ready for structured tasks.
+    var isAvailable: Bool { taggingModel.isAvailable || generalModel.isAvailable }
 
     /// Whether ANY tier — on-device or Private Cloud Compute — can serve a
-    /// request right now. Used to decide whether to attempt AI analysis at
-    /// all before falling back to fully manual entry; `isAvailable` alone
-    /// would incorrectly report unavailable when only PCC is reachable
-    /// (e.g. Apple Intelligence is enabled but the on-device model hasn't
-    /// finished downloading yet, while PCC is already usable).
+    /// request right now.
     var isAvailableViaAnyTier: Bool {
         if isAvailable { return true }
-        return PrivateCloudComputeLanguageModel().isAvailable
+        return PreferredModelRouter.isPrivateCloudComputeAvailable
     }
 
     /// Which tier actually served the most recently completed request, so
@@ -329,29 +448,25 @@ final class ItemIntelligenceService {
         globalRecognizedText: [OCRLine],
         existingLocationNames: [String],
         existingItems: [StashItem],
-        expectedItemHint: String? = nil
+        expectedItemHint: String? = nil,
+        sourceImageData: Data? = nil
     ) async throws -> [ItemAnalysis] {
         guard !regions.isEmpty else { return [] }
 
-        // Devices that can't run Apple Intelligence at all (below the
-        // on-device model's hardware floor) and also have no Private Cloud
-        // Compute available (offline, app not PCC-eligible, daily limit
-        // hit) fall through to the zero-AI heuristic tier rather than
-        // failing outright — see HeuristicItemNamer for why this is a
-        // deliberately conservative, explainable fallback rather than an
-        // attempt to imitate AFM's output quality.
+        // Devices that can't run Apple Intelligence at all fall through to
+        // the zero-AI heuristic tier rather than failing outright.
         guard isAvailableViaAnyTier else {
             lastUsedTier = .heuristicOnly
             return regions.map(HeuristicItemNamer.analyze)
         }
 
-        // Large batches (many items detected in one photo, e.g. a full
-        // shelf) benefit from PCC's bigger context window and reasoning —
-        // the on-device model can start dropping cross-region grounding
-        // quality once the prompt gets long. Everything else stays
-        // on-device first since it's free, private, and has no daily cap.
+        // Large batches benefit from PCC's bigger context / reasoning.
         let preferCloud = regions.count > 6
-        let session = analysisSessionInstance(existingItems: existingItems, preferCloud: preferCloud)
+            || (sourceImageData != nil && regions.count > 3)
+        let (session, model) = makeAnalysisSession(
+            existingItems: existingItems,
+            preferCloud: preferCloud
+        )
 
         let locationHint = existingLocationNames.isEmpty
             ? "none yet"
@@ -363,30 +478,41 @@ final class ItemIntelligenceService {
             "\nThe user is confirming an item from a shopping receipt that read: \($0). Prefer what you actually see/read in the photo below over this hint — only use it to fill in gaps or resolve ambiguity, e.g. if the photo alone doesn't make the product name or price fully clear.\n"
         } ?? ""
 
-        let prompt = Prompt {
-            """
-            A single photo contains \(regions.count) distinct item region(s)
-            detected by on-device object detection. Analyze each region as a
-            separate item, in order. You may call lookupExistingInventory if
-            you want to check whether the user likely already has a similar
-            item, to help decide on quantity or flag a probable restock.
-            \(hintLine)
-            \(regionsDescription)
+        let useVision = sourceImageData != nil && AFMImageSupport.modelSupportsVision(model)
+        // Prefer per-region crops (model sees each item). For a single-item
+        // photo, attach the full frame once instead of a redundant crop.
+        let regionAttachments: [Attachment<ImageAttachmentContent>] = {
+            guard useVision, let sourceImageData else { return [] }
+            if regions.count == 1 {
+                if let full = AFMImageSupport.attachment(from: sourceImageData) {
+                    return [full]
+                }
+                return []
+            }
+            return regions.prefix(8).compactMap { region in
+                AFMImageSupport.regionAttachment(
+                    fullImageData: sourceImageData,
+                    normalizedRect: region.normalizedBoundingBox
+                )
+            }
+        }()
 
-            Additional text found elsewhere in the full image (may be
-            packaging visible near an item, or empty), roughly ordered by
-            how prominent/large the text is:
-            \(Self.describeOCRLines(globalRecognizedText))
+        let prompt = Self.buildAnalysisPrompt(
+            regionCount: regions.count,
+            hintLine: hintLine,
+            regionsDescription: regionsDescription,
+            globalRecognizedText: globalRecognizedText,
+            locationHint: locationHint,
+            regionAttachments: regionAttachments
+        )
 
-            Existing storage locations the user already has: \(locationHint)
-
-            Return one analysis entry per region, in the same order.
-            """
-        }
-
-        // Structured extraction wants low temperature: consistent, literal,
-        // minimally "creative" answers since we need reliably parseable facts.
-        let options = GenerationOptions(temperature: 0.2)
+        // Structured extraction: greedy sampling + low temperature for
+        // consistent, schema-faithful answers.
+        let options = GenerationOptions(
+            samplingMode: .greedy,
+            temperature: 0.2,
+            maximumResponseTokens: 2048
+        )
 
         do {
             let response = try await session.respond(
@@ -394,35 +520,43 @@ final class ItemIntelligenceService {
                 generating: BatchItemAnalysis.self,
                 options: options
             )
-            return Self.finalizeAnalyses(
+            let finalized = Self.finalizeAnalyses(
                 response.content.items,
                 expectedCount: regions.count,
                 existingLocationNames: existingLocationNames
             )
+            return await reconcileLowConfidenceResults(
+                finalized,
+                regions: regions,
+                session: session,
+                existingLocationNames: existingLocationNames,
+                sourceImageData: sourceImageData,
+                modelSupportsVision: useVision
+            )
         } catch {
-            // Retry once, escalating to Private Cloud Compute if the first
-            // attempt ran on-device and PCC is available — a larger,
-            // reasoning-capable model recovers from guided-generation
-            // hiccups on complex multi-region batches more often than
-            // simply retrying the same small model again would. If we were
-            // already on PCC (or it's unavailable), retry on-device with a
-            // narrower, simpler prompt instead.
-            analysisSession = nil // discard possibly-wedged session
-            let retrySession = analysisSessionInstance(existingItems: existingItems, preferCloud: !preferCloud)
-            let retryPrompt = Prompt {
-                """
-                Analyze these \(regions.count) item region(s) from a photo.
-                \(regionsDescription)
-                Return one analysis entry per region, in order.
-                Prefer exact category names from the allowed list. Leave price
-                empty when unsure. Do not invent brand names without OCR/barcode evidence.
-                """
-            }
+            // Retry once, escalating tier + narrower prompt.
+            let (retrySession, _) = makeAnalysisSession(
+                existingItems: existingItems,
+                preferCloud: !preferCloud
+            )
+            let retryPrompt = Self.buildAnalysisPrompt(
+                regionCount: regions.count,
+                hintLine: "",
+                regionsDescription: regionsDescription,
+                globalRecognizedText: globalRecognizedText,
+                locationHint: locationHint,
+                regionAttachments: regionAttachments,
+                compact: true
+            )
             do {
                 let response = try await retrySession.respond(
                     to: retryPrompt,
                     generating: BatchItemAnalysis.self,
-                    options: GenerationOptions(temperature: 0.1)
+                    options: GenerationOptions(
+                        samplingMode: .greedy,
+                        temperature: 0.1,
+                        maximumResponseTokens: 2048
+                    )
                 )
                 return Self.finalizeAnalyses(
                     response.content.items,
@@ -430,7 +564,6 @@ final class ItemIntelligenceService {
                     existingLocationNames: existingLocationNames
                 )
             } catch {
-                // Last resort: heuristic per region so the Add flow still works.
                 lastUsedTier = .heuristicOnly
                 return Self.finalizeAnalyses(
                     regions.map(HeuristicItemNamer.analyze),
@@ -439,6 +572,178 @@ final class ItemIntelligenceService {
                 )
             }
         }
+    }
+
+    /// Builds the analysis prompt, optionally embedding real photos so the
+    /// model uses Apple Intelligence vision rather than OCR/labels alone.
+    private static func buildAnalysisPrompt(
+        regionCount: Int,
+        hintLine: String,
+        regionsDescription: String,
+        globalRecognizedText: [OCRLine],
+        locationHint: String,
+        regionAttachments: [Attachment<ImageAttachmentContent>],
+        compact: Bool = false
+    ) -> Prompt {
+        let visionPreamble: String = regionAttachments.isEmpty
+            ? ""
+            : """
+
+            Region photos are attached below in order — treat them as primary
+            evidence for identity, brand, color/ripeness, and packaging.
+            OCR and classification labels are supporting signals.
+            """
+
+        if compact {
+            return Prompt {
+                """
+                Analyze these \(regionCount) item region(s) from a photo.
+                \(regionsDescription)
+                Return one analysis entry per region, in order.
+                Prefer exact category names from the allowed list. Leave price
+                empty when unsure. Do not invent brand names without OCR/barcode evidence.
+                \(visionPreamble)
+                """
+                for (index, attachment) in regionAttachments.enumerated() {
+                    "Region \(index + 1) photo:"
+                    attachment
+                }
+            }
+        }
+
+        return Prompt {
+            """
+            A single photo contains \(regionCount) distinct item region(s)
+            detected by on-device object detection. Analyze each region as a
+            separate item, in order. You may call lookupExistingInventory if
+            you want to check whether the user likely already has a similar
+            item, to help decide on quantity or flag a probable restock.
+            \(hintLine)
+            \(visionPreamble)
+            """
+            for (index, attachment) in regionAttachments.enumerated() {
+                "Photo for Region \(index + 1):"
+                attachment
+            }
+            """
+            \(regionsDescription)
+
+            Additional text found elsewhere in the full image (may be
+            packaging visible near an item, or empty), roughly ordered by
+            how prominent/large the text is:
+            \(describeOCRLines(globalRecognizedText))
+
+            Existing storage locations the user already has: \(locationHint)
+
+            Return one analysis entry per region, in the same order.
+            """
+        }
+    }
+
+    /// Threshold below which a batch result's category confidence is
+    /// considered too weak to accept on the first pass.
+    private static let lowConfidenceThreshold: Double = 0.4
+
+    /// Re-examines any region whose first-pass `categoryConfidence` came
+    /// back below `lowConfidenceThreshold`, one at a time, with a narrower
+    /// prompt focused entirely on that single region's evidence — no
+    /// competing context from sibling regions to dilute attention, and an
+    /// explicit instruction to think harder before defaulting to "Other."
+    /// This measurably helps the batch call's weakest points: when several
+    /// regions are analyzed together, a genuinely ambiguous one can get
+    /// "rushed" alongside easier siblings in the same response; isolating
+    /// it and asking again tends to either firm up a real answer or
+    /// legitimately confirm the low confidence was warranted — both are
+    /// better outcomes than silently shipping the first guess.
+    ///
+    /// Capped to at most 3 re-examined regions per batch (the common case
+    /// is 0-1) to keep worst-case latency bounded on a photo with many
+    /// simultaneously ambiguous items; any beyond that keep their original
+    /// first-pass result rather than serializing many extra round trips.
+    /// Best-effort: any failure during reconciliation just keeps the
+    /// original first-pass value for that region.
+    private func reconcileLowConfidenceResults(
+        _ analyses: [ItemAnalysis],
+        regions: [RegionAnalysisInput],
+        session: LanguageModelSession,
+        existingLocationNames: [String],
+        sourceImageData: Data?,
+        modelSupportsVision: Bool
+    ) async -> [ItemAnalysis] {
+        guard analyses.count == regions.count else { return analyses }
+
+        let candidateIndices = analyses.indices
+            .filter { analyses[$0].categoryConfidence < Self.lowConfidenceThreshold }
+            .prefix(3)
+
+        guard !candidateIndices.isEmpty else { return analyses }
+
+        var results = analyses
+        for index in candidateIndices {
+            let region = regions[index]
+            let crop: Attachment<ImageAttachmentContent>? = {
+                guard modelSupportsVision, let sourceImageData else { return nil }
+                return AFMImageSupport.regionAttachment(
+                    fullImageData: sourceImageData,
+                    normalizedRect: region.normalizedBoundingBox
+                )
+            }()
+            let focusedPrompt = Prompt {
+                """
+                Look again at just this one item, in isolation, more
+                carefully than a quick first pass — your previous attempt
+                on this exact evidence was uncertain (low confidence), so
+                slow down and reconsider every clue before answering.
+
+                \(Self.describeRegions([region]))
+
+                If, after careful reconsideration, there genuinely isn't
+                enough evidence for a specific identification, it's fine
+                to keep the confidence low and use an honest descriptive
+                name — but if you can now find a plausible, better-
+                supported answer than your first guess (e.g. by weighing
+                the OCR text and labels together more carefully, or by
+                calling lookupExistingInventory to check for a matching
+                item already in the inventory), use it.
+
+                Return exactly one analysis entry for this single item.
+                """
+                if let crop {
+                    "Region photo:"
+                    crop
+                }
+            }
+            do {
+                let response = try await session.respond(
+                    to: focusedPrompt,
+                    generating: BatchItemAnalysis.self,
+                    options: GenerationOptions(
+                        samplingMode: .greedy,
+                        temperature: 0.15,
+                        maximumResponseTokens: 1024
+                    )
+                )
+                if let improved = response.content.items.first {
+                    let sanitized = Self.finalizeAnalyses(
+                        [improved],
+                        expectedCount: 1,
+                        existingLocationNames: existingLocationNames
+                    ).first
+                    // Only replace the first-pass result if reconciliation
+                    // actually produced a more confident answer — never
+                    // let a second pass silently downgrade a result that
+                    // was already fine, and never accept a malformed/empty
+                    // reconciliation response over a working original.
+                    if let sanitized, sanitized.categoryConfidence >= results[index].categoryConfidence {
+                        results[index] = sanitized
+                    }
+                }
+            } catch {
+                // Keep the original first-pass result for this region.
+                continue
+            }
+        }
+        return results
     }
 
     // MARK: - Cross-photo duplicate/angle detection
@@ -460,7 +765,11 @@ final class ItemIntelligenceService {
     func detectDuplicateAngles(_ candidates: [CrossPhotoCandidateSummary]) async -> [[Int]] {
         guard candidates.count > 1, isAvailableViaAnyTier else { return [] }
 
-        let (resolvedModel, _) = PreferredModelRouter.resolve(preferCloud: false)
+        let (resolvedModel, tier) = PreferredModelRouter.resolve(
+            preferCloud: candidates.count > 12,
+            useCase: .contentTagging
+        )
+        lastUsedTier = tier
 
         let instructions = Instructions {
             """
@@ -517,10 +826,15 @@ final class ItemIntelligenceService {
 
         do {
             let session = LanguageModelSession(model: resolvedModel, instructions: instructions)
+            session.prewarm()
             let response = try await session.respond(
                 to: prompt,
                 generating: DuplicateAngleGrouping.self,
-                options: GenerationOptions(temperature: 0.1)
+                options: GenerationOptions(
+                    samplingMode: .greedy,
+                    temperature: 0.1,
+                    maximumResponseTokens: 512
+                )
             )
             let validIndices = Set(candidates.map(\.index))
             // Defensive: drop any group referencing an out-of-range index,
@@ -696,24 +1010,28 @@ final class ItemIntelligenceService {
         return result
     }
 
-    private func analysisSessionInstance(existingItems: [StashItem], preferCloud: Bool = false) -> LanguageModelSession {
-        let (model, tier) = PreferredModelRouter.resolve(preferCloud: preferCloud)
-        let fingerprint = Self.inventoryFingerprint(existingItems)
-
-        if let analysisSession,
-           analysisSessionItemCount == existingItems.count,
-           analysisSessionTier == tier,
-           analysisSessionFingerprint == fingerprint {
-            return analysisSession
-        }
+    /// Fresh analysis session per photo (not cached — multimodal transcripts
+    /// would otherwise retain prior images). Uses `.contentTagging` use case
+    /// and prewarms instructions for lower first-token latency.
+    private func makeAnalysisSession(
+        existingItems: [StashItem],
+        preferCloud: Bool = false
+    ) -> (LanguageModelSession, any LanguageModel) {
+        let (model, tier) = PreferredModelRouter.resolve(
+            preferCloud: preferCloud,
+            useCase: .contentTagging
+        )
+        lastUsedTier = tier
 
         let instructions = Instructions {
             """
             You catalog household and personal storage items from photo
-            analysis results. You are precise, concise, and never invent
-            specific facts that aren't supported by the given labels or
-            text. When uncertain about an expiry date or category, prefer a
-            lower confidence score rather than a confident wrong guess.
+            analysis results and (when provided) actual photos of each
+            region. You are precise, concise, and never invent specific
+            facts that aren't supported by the given labels, text, or
+            visible photo evidence. When uncertain about an expiry date or
+            category, prefer a lower confidence score rather than a
+            confident wrong guess.
 
             Special expertise you apply:
             - Fresh produce (fruit/vegetables): identify the specific type
@@ -808,6 +1126,60 @@ final class ItemIntelligenceService {
               flagging, not reflexively for every region.
             \(tier == .privateCloudCompute ? "- You are running on Apple's Private Cloud Compute with a larger context window and reasoning capability — use that headroom to reason carefully through ambiguous or large multi-item batches rather than rushing to an answer." : "")
 
+            Worked examples of the reasoning you should apply (inputs
+            abbreviated; outputs show the values that matter most):
+
+            Example 1 — packaging with a clear printed date:
+            Labels: "bottle, dairy product". OCR (large text first):
+            "Amul Gold" (large), "Toned Milk" (medium), "Best Before
+            12/08/2026" (small). No price-shaped text.
+            → name: "Amul Gold Toned Milk", category: "Dairy",
+            subcategory: "Toned Milk", isPerishable: true,
+            estimatedExpiryDateISO: "2026-08-12", expiryConfidence: 0.95
+            (explicit printed date), categoryConfidence: 0.9.
+
+            Example 2 — fresh produce with only visual cues, no text:
+            Labels: "banana, fruit, produce". No OCR text, no barcode.
+            → name: "Bananas", category: "Fresh Produce", subcategory:
+            "Banana", isPerishable: true, ripenessNote describes the
+            visible ripeness (e.g. "Yellow with light brown spots,
+            ripe"), expiryConfidence around 0.55-0.7 (visual estimate,
+            not a printed date, so never 0.9+), categoryConfidence high
+            since the label is unambiguous.
+
+            Example 3 — only generic/low-information labels, weak OCR:
+            Labels: "object, material, texture". One low-confidence OCR
+            line: "ARN" (small, confidence 0.3). No barcode.
+            → Do not name it "Object" or "Material" verbatim. Prefer a
+            plain honest description like "Unlabeled Item" or a
+            description of the visible shape/color if labels hint at one.
+            categoryConfidence should be low (0.2-0.35) to flag this for
+            user review. Do not fabricate a specific product identity
+            from a 3-letter low-confidence OCR fragment.
+
+            Example 4 — barcode resolves via product lookup:
+            Region has a barcode with an online product database match:
+            name "Britannia Good Day Cashew Cookies", brand "Britannia",
+            category "Snacks". Classification labels: "packaged food,
+            snack, box". No conflicting OCR evidence.
+            → Trust the lookup as strong grounding: name: "Britannia Good
+            Day Cashew Cookies", category: "Pantry & Food", subcategory:
+            "Cookies", categoryConfidence: 0.85+. Don't override it with a
+            vaguer name just because OCR alone would've been weaker.
+
+            Example 5 — price-shaped text with a decoy number present:
+            Price-shaped candidates for this region: "MRP Rs.149" (has
+            currency marker), "500g" (no currency marker — this is a
+            weight, not a price, even though it's numeric).
+            → detectedPriceAmount: "149.00", detectedPriceCurrency:
+            "INR". Never pick the weight-shaped candidate just because
+            it's also numeric — the currency-marked candidate always wins
+            when one exists.
+
+            These examples illustrate the reasoning pattern, not a
+            format to copy verbatim — apply the same judgment to whatever
+            labels, OCR text, and evidence are actually given below.
+
             Today's date is \(Self.todayISO()).
             """
         }
@@ -817,12 +1189,11 @@ final class ItemIntelligenceService {
             tools: [InventoryLookupTool(items: existingItems)],
             instructions: instructions
         )
-        analysisSession = session
-        analysisSessionItemCount = existingItems.count
-        analysisSessionFingerprint = fingerprint
-        analysisSessionTier = tier
-        lastUsedTier = tier
-        return session
+        // Prewarm loads the model + instructions before the first respond,
+        // which is the main latency win now that sessions aren't reused
+        // across photos (to avoid multimodal transcript growth).
+        session.prewarm()
+        return (session, model)
     }
 
     // MARK: - Natural language search
@@ -865,10 +1236,11 @@ final class ItemIntelligenceService {
             """
         }
 
-        // Slightly higher temperature than structured extraction — search
-        // intent interpretation benefits a little from flexibility in
-        // reading varied phrasing, but still needs to stay grounded.
-        let options = GenerationOptions(temperature: 0.3)
+        let options = GenerationOptions(
+            samplingMode: .greedy,
+            temperature: 0.25,
+            maximumResponseTokens: 512
+        )
 
         do {
             let response = try await session.respond(to: prompt, generating: SearchIntent.self, options: options)
@@ -889,7 +1261,11 @@ final class ItemIntelligenceService {
                 let response = try await retrySession.respond(
                     to: retryPrompt,
                     generating: SearchIntent.self,
-                    options: GenerationOptions(temperature: 0.15)
+                    options: GenerationOptions(
+                        samplingMode: .greedy,
+                        temperature: 0.1,
+                        maximumResponseTokens: 512
+                    )
                 )
                 return response.content.sanitized(knownCategories: knownCategories, knownLocations: knownLocations)
             } catch {
@@ -904,15 +1280,11 @@ final class ItemIntelligenceService {
     }
 
     private func searchSessionInstance(existingItems: [StashItem]) -> LanguageModelSession {
-        // Search doesn't need PCC's extra headroom for a normal-sized
-        // inventory, so preferCloud stays false here — but if on-device
-        // itself isn't ready (Apple Intelligence still enabling, model
-        // downloading), resolve() transparently falls through to PCC when
-        // available rather than leaving search broken.
-        let (model, tier) = PreferredModelRouter.resolve(preferCloud: false)
+        let (model, tier) = PreferredModelRouter.resolve(
+            preferCloud: false,
+            useCase: .contentTagging
+        )
 
-        // Fingerprint includes a cheap content signature so renames/edits
-        // without count changes still refresh tool snapshots.
         let fingerprint = Self.inventoryFingerprint(existingItems)
         if let searchSession,
            searchSessionItemCount == existingItems.count,
@@ -942,6 +1314,7 @@ final class ItemIntelligenceService {
             tools: [InventoryLookupTool(items: existingItems)],
             instructions: instructions
         )
+        session.prewarm()
         searchSession = session
         searchSessionTier = tier
         lastUsedTier = tier
@@ -972,21 +1345,19 @@ final class ItemIntelligenceService {
     /// to force a refresh regardless of count, e.g. after an edit that
     /// doesn't change the total item count.)
     func invalidateSessions() {
-        analysisSession = nil
         searchSession = nil
-        analysisSessionItemCount = -1
         searchSessionItemCount = -1
-        analysisSessionFingerprint = 0
         searchSessionFingerprint = 0
-        analysisSessionTier = nil
         searchSessionTier = nil
     }
 
     private var unavailableReason: SystemLanguageModel.Availability.UnavailableReason {
-        if case .unavailable(let reason) = model.availability {
+        if case .unavailable(let reason) = taggingModel.availability {
             return reason
         }
-        // Shouldn't happen given call sites guard on availability first.
+        if case .unavailable(let reason) = generalModel.availability {
+            return reason
+        }
         return .appleIntelligenceNotEnabled
     }
 

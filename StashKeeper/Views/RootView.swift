@@ -83,11 +83,13 @@ struct RootView: View {
         }
         .sheet(isPresented: $showingAddItem) {
             AddItemFlowView()
+                .sheetPopIn()
         }
         .sheet(item: routedItemBinding) { item in
             NavigationStack {
                 ItemDetailSheetWrapper(item: item)
             }
+            .sheetPopIn()
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
             showingAddItem = true
@@ -175,11 +177,13 @@ struct RootView: View {
                 #if os(macOS)
                 .frame(minWidth: 560, minHeight: 640)
                 #endif
+                .sheetPopIn()
         }
         .sheet(item: routedItemBinding) { item in
             NavigationStack {
                 ItemDetailSheetWrapper(item: item)
             }
+            .sheetPopIn()
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
             showingAddItem = true

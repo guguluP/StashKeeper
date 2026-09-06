@@ -75,13 +75,16 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingAssistant) {
             StashAssistantChatView()
+                .sheetPopIn()
         }
         .sheet(isPresented: $showingRecipeIdeas) {
             RecipeSuggestionsSheet(suggestions: recipeIdeas, isLoading: isLoadingRecipeIdeas)
+                .sheetPopIn()
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingReceiptScan) {
             ReceiptScanView()
+                .sheetPopIn()
         }
         #endif
     }

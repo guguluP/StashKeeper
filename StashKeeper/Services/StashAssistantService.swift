@@ -74,17 +74,34 @@ final class StashAssistantService {
 
     private static let baseInstructions = """
         You are the in-app assistant for StashKeeper, a personal home
-        inventory app. You help the user with two things: (1) questions
-        about what they have stored — quantities, locations, expiry —
-        using the lookupExistingInventory tool, and (2) practical food and
-        recipe suggestions using what's actually in their stash, optionally
-        informed by their activity today via the getTodayHealthContext
-        tool.
+        inventory app. You help the user with:
+        (1) questions about what they have stored — quantities,
+        locations, expiry — using the lookupExistingInventory tool;
+        (2) practical food and recipe suggestions using what's actually
+        in their stash, optionally informed by their activity today via
+        the getTodayHealthContext tool;
+        (3) resolving a barcode/UPC/EAN number the user mentions directly
+        into a real product name/brand/category using the
+        lookupProductByBarcode tool;
+        (4) actually updating their inventory when they mention using,
+        finishing, consuming, throwing away, or restocking something —
+        via the adjustItemQuantity tool. This is a real write action, not
+        just conversation: only call it when the user's message clearly
+        states or implies a completed change in what they have (e.g. "I
+        used the last of the milk", "used 2 eggs", "add 3 more paper
+        towels"), not for hypothetical or future statements ("I might use
+        some eggs later" should NOT trigger an adjustment). After a
+        successful adjustment, confirm plainly what changed and to what
+        new quantity, using the tool's actual returned numbers — never
+        state a new quantity you didn't get back from the tool. If the
+        tool reports an ambiguous or no match, ask the user to clarify
+        rather than guessing or silently skipping the request.
 
-        Ground every factual claim about their inventory or health data in
-        an actual tool call — never invent quantities, locations, or
-        activity numbers. If a tool returns no data or is unavailable, say
-        so plainly rather than guessing.
+        Ground every factual claim about their inventory, health data, or
+        a looked-up product in an actual tool call — never invent
+        quantities, locations, activity numbers, or product identities.
+        If a tool returns no data, is unavailable, or reports an
+        ambiguous match, say so plainly rather than guessing.
 
         Keep answers conversational and concise — this is a chat, not a
         report. For recipe suggestions, prioritize ingredients the user
@@ -101,8 +118,13 @@ final class StashAssistantService {
     /// uses) or if the resolved model tier has changed, so a stale tool
     /// snapshot or a tier flip (e.g. Apple Intelligence toggled mid-use)
     /// doesn't silently persist across the conversation.
-    private func warmSession(items: [StashItem]) -> LanguageModelSession {
-        let (model, tier) = PreferredModelRouter.resolve(preferCloud: false)
+    private func warmSession(items: [StashItem], modelContext: ModelContext) -> LanguageModelSession {
+        // Chat is open-ended conversation — use the general use case, not
+        // content tagging (which is specialized for classification/schema fill).
+        let (model, tier) = PreferredModelRouter.resolve(
+            preferCloud: false,
+            useCase: .general
+        )
 
         if let session, sessionItemCount == items.count, sessionTier == tier {
             return session
@@ -110,12 +132,16 @@ final class StashAssistantService {
 
         let inventoryTool = InventoryLookupTool(items: items)
         let healthTool = HealthContextTool()
+        let productLookupTool = ProductLookupTool()
+        let adjustmentTool = InventoryAdjustmentTool(modelContext: modelContext)
 
         let newSession = LanguageModelSession(
             model: model,
-            tools: [inventoryTool, healthTool],
+            tools: [inventoryTool, healthTool, productLookupTool, adjustmentTool],
             instructions: Instructions { Self.baseInstructions }
         )
+        // Prewarm so the first chat turn is not paying model-load cost.
+        newSession.prewarm()
         session = newSession
         sessionItemCount = items.count
         sessionTier = tier
@@ -128,12 +154,10 @@ final class StashAssistantService {
     /// so the latency difference versus true token streaming is minor,
     /// and this avoids partial-JSON/tool-call edge cases that streaming
     /// structured generation can hit mid-tool-call.
-    func send(_ message: String, items: [StashItem]) async throws -> String {
-        let onDeviceAvailable: Bool = {
-            if case .available = SystemLanguageModel.default.availability { return true }
-            return false
-        }()
-        guard onDeviceAvailable || PrivateCloudComputeLanguageModel().isAvailable else {
+    func send(_ message: String, items: [StashItem], modelContext: ModelContext) async throws -> String {
+        let onDeviceAvailable = PreferredModelRouter.onDeviceModel(for: .general).isAvailable
+        let pccAvailable = PreferredModelRouter.isPrivateCloudComputeAvailable
+        guard onDeviceAvailable || pccAvailable else {
             // No AFM tier reachable at all — rather than a dead end, fall
             // back to deterministic rule-based answers over the same
             // underlying data, mirroring HeuristicItemNamer's philosophy
@@ -156,11 +180,15 @@ final class StashAssistantService {
         }
 
         lastResponseWasHeuristic = false
-        let activeSession = warmSession(items: items)
+        let activeSession = warmSession(items: items, modelContext: modelContext)
         do {
             let response = try await activeSession.respond(
                 to: Prompt { message },
-                options: GenerationOptions(temperature: 0.6)
+                options: GenerationOptions(
+                    temperature: 0.6,
+                    maximumResponseTokens: 1024,
+                    toolCallingMode: .allowed
+                )
             )
             return response.content
         } catch {
