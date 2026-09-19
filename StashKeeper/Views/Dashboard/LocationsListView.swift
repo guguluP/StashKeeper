@@ -11,7 +11,7 @@ import SwiftData
 
 struct LocationsListView: View {
 
-    @Query(sort: \StorageLocation.name) private var locations: [StorageLocation]
+    @Query(sort: \StorageLocation.sortIndex) private var locations: [StorageLocation]
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddLocation = false
 
@@ -35,6 +35,7 @@ struct LocationsListView: View {
                 }
             }
             .onDelete(perform: deleteLocations)
+            .onMove(perform: moveLocations)
         }
         .navigationTitle("Locations")
         .toolbar {
@@ -45,6 +46,11 @@ struct LocationsListView: View {
                     Image(systemName: "plus")
                 }
             }
+            #if os(iOS)
+            ToolbarItem(placement: .topBarLeading) {
+                EditButton()
+            }
+            #endif
         }
         .sheet(isPresented: $showingAddLocation) {
             AddLocationSheet()
@@ -64,6 +70,15 @@ struct LocationsListView: View {
     private func deleteLocations(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(locations[index])
+        }
+        try? modelContext.save()
+    }
+
+    private func moveLocations(from source: IndexSet, to destination: Int) {
+        var ordered = locations
+        ordered.move(fromOffsets: source, toOffset: destination)
+        for (index, location) in ordered.enumerated() {
+            location.sortIndex = index
         }
         try? modelContext.save()
     }

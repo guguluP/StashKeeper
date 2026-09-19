@@ -27,6 +27,7 @@ struct StashKeeperApp: App {
                     await NotificationManager.shared.requestAuthorizationIfNeeded()
                     await resyncAllNotifications()
                     MilestoneEngine.shared.recordDailyActivity(context: modelContainer.mainContext)
+                    await SpotlightIndexer.reindexAll()
                 }
         }
         .modelContainer(modelContainer)
@@ -62,6 +63,4 @@ struct StashKeeperApp: App {
     }
 }
 
-extension Notification.Name {
-    static let requestNewItemFlow = Notification.Name("requestNewItemFlow")
-}
+

@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import AppIntents
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
@@ -393,6 +394,7 @@ struct ItemRow: View {
             }
         }
         .padding(.vertical, 6)
+        .appEntityIdentifier(EntityIdentifier(for: StashItemEntity.self, identifier: item.id))
         #if os(macOS)
         .padding(.horizontal, 6)
         .background(

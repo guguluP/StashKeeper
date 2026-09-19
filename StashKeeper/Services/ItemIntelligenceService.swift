@@ -2,10 +2,10 @@
 //  ItemIntelligenceService.swift
 //  StashKeeper
 //
-//  Wraps the Foundation Models framework (Apple's on-device Apple
-//  Intelligence LLM — the only model tier third-party apps can access;
-//  Apple's larger server-side model is reserved for first-party features
-//  and has no public API). This service is the "best use of AFM" layer:
+//  Wraps Foundation Models v3 (iOS 27): on-device AFM with vision,
+//  Dynamic Profiles, OCRTool/BarcodeReaderTool, and Private Cloud Compute
+//  when provisioned and under quota. Heuristic fallback if no model is
+//  available. This service is the "best use of AFM" layer:
 //
 //  - A warm, persistent LanguageModelSession per task type instead of a
 //    fresh session per call, so repeated instructions aren't re-parsed
@@ -26,6 +26,7 @@ import CoreGraphics
 import Foundation
 import FoundationModels
 import ImageIO
+import Vision
 
 enum ItemIntelligenceError: Error, LocalizedError {
     case modelUnavailable(SystemLanguageModel.Availability.UnavailableReason)
@@ -346,10 +347,18 @@ enum PreferredModelRouter {
         return false
     }()
 
-    /// Safe PCC availability: never constructs the type without entitlement.
+    /// Safe PCC availability: never constructs the type without entitlement,
+    /// and skip it when the daily Private Cloud Compute quota is exhausted.
     static var isPrivateCloudComputeAvailable: Bool {
         guard isProvisionedForPrivateCloudCompute else { return false }
-        return PrivateCloudComputeLanguageModel().isAvailable
+        let pcc = PrivateCloudComputeLanguageModel()
+        guard pcc.isAvailable else { return false }
+        return !pcc.quotaUsage.isLimitReached
+    }
+
+    static func privateCloudModelIfAvailable() -> PrivateCloudComputeLanguageModel? {
+        guard isPrivateCloudComputeAvailable else { return nil }
+        return PrivateCloudComputeLanguageModel()
     }
 
     /// On-device model for a specialized use case.
@@ -589,9 +598,11 @@ final class ItemIntelligenceService {
             ? ""
             : """
 
-            Region photos are attached below in order — treat them as primary
-            evidence for identity, brand, color/ripeness, and packaging.
-            OCR and classification labels are supporting signals.
+            Region photos are attached below in order (labeled region-N) —
+            treat them as primary evidence. You may call OCRTool and
+            BarcodeReaderTool on those labeled attachments to re-read
+            packaging text or barcodes yourself. Pre-extracted OCR and
+            classification labels are supporting signals.
             """
 
         if compact {
@@ -606,7 +617,7 @@ final class ItemIntelligenceService {
                 """
                 for (index, attachment) in regionAttachments.enumerated() {
                     "Region \(index + 1) photo:"
-                    attachment
+                    attachment.label("region-\(index + 1)")
                 }
             }
         }
@@ -623,7 +634,7 @@ final class ItemIntelligenceService {
             """
             for (index, attachment) in regionAttachments.enumerated() {
                 "Photo for Region \(index + 1):"
-                attachment
+                attachment.label("region-\(index + 1)")
             }
             """
             \(regionsDescription)
@@ -710,7 +721,7 @@ final class ItemIntelligenceService {
                 """
                 if let crop {
                     "Region photo:"
-                    crop
+                    crop.label("region-focus")
                 }
             }
             do {
@@ -1023,13 +1034,15 @@ final class ItemIntelligenceService {
         )
         lastUsedTier = tier
 
-        let instructions = Instructions {
-            """
+        let instructionsText = """
             You catalog household and personal storage items from photo
             analysis results and (when provided) actual photos of each
             region. You are precise, concise, and never invent specific
             facts that aren't supported by the given labels, text, or
-            visible photo evidence. When uncertain about an expiry date or
+            visible photo evidence. When a photo is attached, you may
+            call OCRTool and BarcodeReaderTool on the labeled attachment
+            to extract printed text or barcodes yourself if the provided
+            OCR looks incomplete or garbled. When uncertain about an expiry date or
             category, prefer a lower confidence score rather than a
             confident wrong guess.
 
@@ -1182,12 +1195,16 @@ final class ItemIntelligenceService {
 
             Today's date is \(Self.todayISO()).
             """
-        }
+
+        var tools: [any Tool] = [InventoryLookupTool(items: existingItems)]
+        tools.append(contentsOf: StashVisionTools.analysisTools())
 
         let session = LanguageModelSession(
-            model: model,
-            tools: [InventoryLookupTool(items: existingItems)],
-            instructions: instructions
+            profile: StashAnalysisProfile(
+                tools: tools,
+                instructionsText: instructionsText,
+                preferCloud: preferCloud
+            )
         )
         // Prewarm loads the model + instructions before the first respond,
         // which is the main latency win now that sessions aren't reused
@@ -1293,8 +1310,7 @@ final class ItemIntelligenceService {
             return searchSession
         }
 
-        let instructions = Instructions {
-            """
+        let instructionsText = """
             You translate a user's natural-language search over their personal
             storage inventory into structured filters. Only use category or
             location names from the provided lists if they clearly match;
@@ -1307,12 +1323,12 @@ final class ItemIntelligenceService {
             when you're unsure. Prefer empty structured fields over wrong ones.
             Today's date is \(Self.todayISO()).
             """
-        }
 
         let session = LanguageModelSession(
-            model: model,
-            tools: [InventoryLookupTool(items: existingItems)],
-            instructions: instructions
+            profile: StashSearchProfile(
+                tools: [InventoryLookupTool(items: existingItems)],
+                instructionsText: instructionsText
+            )
         )
         session.prewarm()
         searchSession = session

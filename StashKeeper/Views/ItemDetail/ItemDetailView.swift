@@ -9,6 +9,7 @@
 
 import SwiftUI
 import SwiftData
+import AppIntents
 
 struct ItemDetailView: View {
 
@@ -263,6 +264,15 @@ struct ItemDetailView: View {
             }
         }
         .navigationTitle(item.name)
+        .appEntityIdentifier(EntityIdentifier(for: StashItemEntity.self, identifier: item.id))
+        .userActivity("com.piyushpatnaik.StashKeeper.viewItem") { activity in
+            activity.title = item.name
+            activity.isEligibleForSearch = true
+            activity.isEligibleForHandoff = true
+            #if os(iOS)
+            activity.isEligibleForPrediction = true
+            #endif
+        }
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTransition(.zoom(sourceID: item.id, in: heroNamespace))
@@ -276,6 +286,7 @@ struct ItemDetailView: View {
         .onChange(of: item.expiryDate) { _, _ in Task { await resync() } }
         .onDisappear {
             try? modelContext.save()
+            Task { await SpotlightIndexer.index(item: item) }
         }
         .confirmationDialog(
             "Delete this item?",

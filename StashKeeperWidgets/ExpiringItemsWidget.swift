@@ -102,10 +102,13 @@ struct ExpiringItemsWidgetView: View {
             VStack(alignment: .leading) {
                 Text("Expiring")
                     .font(.headline)
+                    .widgetAccentable()
                 Text(entry.insight)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        case .accessoryInline:
+            Text(entry.insight)
         #endif
         default:
             mediumLargeLayout
@@ -117,6 +120,7 @@ struct ExpiringItemsWidgetView: View {
             Label("Expiring", systemImage: "clock.badge.exclamationmark")
                 .font(.headline)
                 .foregroundStyle(.orange)
+                .widgetAccentable()
             if let first = entry.items.first {
                 Text(first.name)
                     .font(.subheadline.weight(.semibold))
@@ -137,9 +141,7 @@ struct ExpiringItemsWidgetView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .containerBackground(for: .widget) {
-            LinearGradient(colors: [Color.orange.opacity(0.22), Color.black.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        }
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 
     private var mediumLargeLayout: some View {
@@ -148,6 +150,7 @@ struct ExpiringItemsWidgetView: View {
                 Label("Needs attention", systemImage: "clock.badge.exclamationmark")
                     .font(.headline)
                     .foregroundStyle(.orange)
+                    .widgetAccentable()
                 Spacer()
                 Text("\(entry.items.count)")
                     .font(.caption.weight(.bold))
@@ -198,16 +201,15 @@ struct ExpiringItemsWidgetView: View {
             }
             Spacer(minLength: 0)
         }
-        .containerBackground(for: .widget) {
-            LinearGradient(colors: [Color.orange.opacity(0.18), Color.accentColor.opacity(0.08)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        }
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 
     private var visibleItems: [ExpiringItemSummary] {
         switch family {
         case .systemSmall: return Array(entry.items.prefix(1))
         case .systemMedium: return Array(entry.items.prefix(3))
-        default: return Array(entry.items.prefix(5))
+        case .systemLarge: return Array(entry.items.prefix(5))
+        default: return entry.items
         }
     }
 }
@@ -223,11 +225,11 @@ struct ExpiringItemsWidget: Widget {
         .description("See what's expiring and mark something used without opening the app.")
         #if os(iOS)
         .supportedFamilies([
-            .systemSmall, .systemMedium, .systemLarge,
-            .accessoryCircular, .accessoryRectangular
+            .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
+            .accessoryCircular, .accessoryRectangular, .accessoryInline
         ])
         #else
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
         #endif
     }
 }

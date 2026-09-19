@@ -784,6 +784,7 @@ struct AddItemFlowView: View {
         try? modelContext.save()
         ItemIntelligenceService.shared.invalidateSessions()
         reloadWidgets()
+        Task { await SpotlightIndexer.reindexAll() }
         dismiss()
     }
 

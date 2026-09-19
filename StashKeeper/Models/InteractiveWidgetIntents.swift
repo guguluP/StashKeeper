@@ -8,9 +8,39 @@
 
 import AppIntents
 import SwiftData
+import Foundation
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
+
+extension Notification.Name {
+    static let requestNewItemFlow = Notification.Name("requestNewItemFlow")
+    static let showExpiringItems = Notification.Name("showExpiringItems")
+}
+
+struct OpenAddItemIntent: AppIntent {
+    static let title: LocalizedStringResource = "Add Item to Stash"
+    static let description = IntentDescription("Opens the camera flow to catalog a new item.")
+    static var openAppWhenRun: Bool { true }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(name: .requestNewItemFlow, object: nil)
+        return .result()
+    }
+}
+
+struct OpenExpiringListIntent: AppIntent {
+    static let title: LocalizedStringResource = "Show Expiring Items"
+    static let description = IntentDescription("Opens StashKeeper to items that need attention.")
+    static var openAppWhenRun: Bool { true }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(name: .showExpiringItems, object: nil)
+        return .result()
+    }
+}
 
 struct ConsumeStashItemIntent: AppIntent {
     static let title: LocalizedStringResource = "Use One"

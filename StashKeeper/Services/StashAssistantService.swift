@@ -62,6 +62,9 @@ final class StashAssistantService {
     private var session: LanguageModelSession?
     private var sessionItemCount: Int = -1
     private var sessionTier: ModelTier?
+    /// Read by `StashChatProfile` on every prompt so cook/plan turns can
+    /// escalate to PCC + deeper reasoning without rebuilding the session.
+    let chatPreferDeepReasoning = DeepReasoningFlag()
 
     /// True if the most recently completed response came from the
     /// zero-AI heuristic fallback rather than an actual AFM tier — lets
@@ -71,6 +74,17 @@ final class StashAssistantService {
     private(set) var lastResponseWasHeuristic = false
 
     private init() {}
+
+    /// Cook / plan / multi-item questions benefit from PCC + deeper
+    /// reasoning; inventory lookups stay on the fast on-device profile.
+    private static func shouldUseDeepReasoning(for message: String) -> Bool {
+        let lower = message.lowercased()
+        let triggers = [
+            "cook", "recipe", "meal", "dinner", "lunch", "breakfast",
+            "what can i make", "plan", "suggest", "ideas", "leftover"
+        ]
+        return triggers.contains { lower.contains($0) }
+    }
 
     private static let baseInstructions = """
         You are the in-app assistant for StashKeeper, a personal home
@@ -133,15 +147,21 @@ final class StashAssistantService {
             return session
         }
 
-        let inventoryTool = InventoryLookupTool(items: items)
-        let healthTool = HealthContextTool()
-        let productLookupTool = ProductLookupTool()
-        let adjustmentTool = InventoryAdjustmentTool(modelContext: modelContext)
+        var tools: [any Tool] = [
+            InventoryLookupTool(items: items),
+            ProductLookupTool(),
+            InventoryAdjustmentTool(modelContext: modelContext)
+        ]
+        #if os(iOS)
+        tools.append(HealthContextTool())
+        #endif
 
         let newSession = LanguageModelSession(
-            model: model,
-            tools: [inventoryTool, healthTool, productLookupTool, adjustmentTool],
-            instructions: Instructions { Self.baseInstructions }
+            profile: StashChatProfile(
+                tools: tools,
+                instructionsText: Self.baseInstructions,
+                preferDeepReasoning: { [flag = chatPreferDeepReasoning] in flag.value }
+            )
         )
         // Prewarm so the first chat turn is not paying model-load cost.
         newSession.prewarm()
@@ -183,13 +203,14 @@ final class StashAssistantService {
         }
 
         lastResponseWasHeuristic = false
+        chatPreferDeepReasoning.value = Self.shouldUseDeepReasoning(for: message)
         let activeSession = warmSession(items: items, modelContext: modelContext)
         do {
             let response = try await activeSession.respond(
                 to: Prompt { message },
                 options: GenerationOptions(
-                    temperature: 0.6,
-                    maximumResponseTokens: 1024,
+                    temperature: chatPreferDeepReasoning.value ? 0.55 : 0.4,
+                    maximumResponseTokens: chatPreferDeepReasoning.value ? 2048 : 1024,
                     toolCallingMode: .allowed
                 )
             )

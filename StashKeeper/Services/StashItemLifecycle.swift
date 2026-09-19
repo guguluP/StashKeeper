@@ -27,8 +27,11 @@ enum StashItemLifecycle {
             PhotoStore.delete(filename: filename)
         }
 
+        let removedID = item.id
         context.delete(item)
         try? context.save()
+        Task { await SpotlightIndexer.remove(id: removedID) }
+        reloadWidgets()
 
         if !notificationIDs.isEmpty {
             Task {

@@ -16,6 +16,8 @@ struct StashKeeperWidgetsBundle: WidgetBundle {
         ExpiringItemsWidget()
         #if os(iOS)
         StashScanLiveActivity()
+        AddItemControl()
+        ExpiringControl()
         #endif
     }
 }

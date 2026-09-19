@@ -9,6 +9,7 @@
 
 import AppIntents
 import SwiftData
+import SwiftUI
 
 struct WhatsExpiringIntent: AppIntent {
 
@@ -18,14 +19,14 @@ struct WhatsExpiringIntent: AppIntent {
     )
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<[String]> & ProvidesDialog {
+    func perform() async throws -> some IntentResult & ReturnsValue<[String]> & ProvidesDialog & ShowsSnippetView {
         let context = ModelContainerProvider.shared.mainContext
         let descriptor = FetchDescriptor<StashItem>()
         let items = (try? context.fetch(descriptor)) ?? []
         let attention = ExpiryEngine.shared.attentionNeeded(items: items)
 
         guard !attention.isEmpty else {
-            return .result(value: [], dialog: "Nothing is expiring soon. You're all caught up.")
+            return .result(value: [], dialog: "Nothing is expiring soon. You're all caught up.", view: ExpiringSnippetView(lines: ["All clear"]))
         }
 
         let summaries = attention.prefix(10).map { item -> String in
@@ -38,7 +39,7 @@ struct WhatsExpiringIntent: AppIntent {
         }
 
         let dialog = "You have \(attention.count) item\(attention.count == 1 ? "" : "s") needing attention: " + summaries.joined(separator: "; ")
-        return .result(value: summaries, dialog: IntentDialog(stringLiteral: dialog))
+        return .result(value: summaries, dialog: IntentDialog(stringLiteral: dialog), view: ExpiringSnippetView(lines: Array(summaries)))
     }
 }
 
@@ -274,6 +275,24 @@ struct QuickAddItemIntent: AppIntent {
 
 struct StashKeeperShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: OpenAddItemIntent(),
+            phrases: [
+                "Add an item in \(.applicationName)",
+                "Catalog something in \(.applicationName)"
+            ],
+            shortTitle: "Add Item",
+            systemImageName: "plus.circle"
+        )
+        AppShortcut(
+            intent: OpenStashItemIntent(),
+            phrases: [
+                "Open an item in \(.applicationName)",
+                "Show me an item in \(.applicationName)"
+            ],
+            shortTitle: "Open Item",
+            systemImageName: "shippingbox"
+        )
         AppShortcut(
             intent: WhatsExpiringIntent(),
             phrases: [

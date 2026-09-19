@@ -108,6 +108,14 @@ struct RootView: View {
             handleNotificationAction(notification)
         }
         .onOpenURL(perform: handleOpenURL)
+        .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
+            if let id = notification.userInfo?["itemID"] as? UUID {
+                routedItemID = id
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
+            selectedSection = .dashboard
+        }
     }
 
     /// Each tab hosts a section directly (not through `destinationView`,
@@ -190,6 +198,14 @@ struct RootView: View {
             handleNotificationAction(notification)
         }
         .onOpenURL(perform: handleOpenURL)
+        .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
+            if let id = notification.userInfo?["itemID"] as? UUID {
+                routedItemID = id
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
+            selectedSection = .dashboard
+        }
     }
 
     /// Bridges `routedItemID` (set when a notification is tapped) to a
