@@ -69,6 +69,7 @@ struct MenuBarSummaryView: View {
 
             HStack {
                 Button("Open StashKeeper") {
+                    NSApp.activate(ignoringOtherApps: true)
                     openWindow(id: "main")
                 }
                 Spacer()

@@ -45,14 +45,13 @@ import Foundation
 import SwiftData
 
 enum SharedModelConfiguration {
-    static let appGroupIdentifier = "group.com.piyushpatnaik.StashKeeper"
+    nonisolated static let appGroupIdentifier = "group.com.piyushpatnaik.StashKeeper"
 
-    /// Set this to `true` once the App Group is genuinely provisioned (see
-    /// the three conditions above) and the widget target has been added.
-    /// Until then, every target just uses its own default, non-shared
-    /// SwiftData store — the app works standalone, the widget (once added)
-    /// simply won't see real data yet.
-    static let useAppGroupContainer = false
+    /// Shared App Group store for the app, widgets, and App Intents.
+    /// Requires `group.com.piyushpatnaik.StashKeeper` on both targets'
+    /// provisioning profiles (paid team). If launch aborts, confirm the
+    /// group is enabled in Signing & Capabilities.
+    nonisolated static let useAppGroupContainer = true
 
     static let sharedSchema = Schema([StashItem.self, StorageLocation.self, StreakRecord.self])
 
@@ -92,4 +91,9 @@ enum SharedModelConfiguration {
     private static func fatalErrorUnrecoverable(_ error: Error) -> Never {
         fatalError("Failed to create ModelContainer even with fallback configuration: \(error)")
     }
+}
+
+/// Single SwiftData container for the app, App Intents, and widget writes.
+enum ModelContainerProvider {
+    static let shared: ModelContainer = SharedModelConfiguration.makeContainer()
 }

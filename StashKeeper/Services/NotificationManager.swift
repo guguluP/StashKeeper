@@ -146,7 +146,9 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        guard let itemIDString = response.notification.request.content.userInfo["itemID"] as? String,
+        let actionID = response.actionIdentifier
+        let userInfo = response.notification.request.content.userInfo
+        guard let itemIDString = userInfo["itemID"] as? String,
               let itemID = UUID(uuidString: itemIDString) else { return }
 
         await MainActor.run {
@@ -155,7 +157,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                 object: nil,
                 userInfo: [
                     "itemID": itemID,
-                    "actionID": response.actionIdentifier
+                    "actionID": actionID
                 ]
             )
         }

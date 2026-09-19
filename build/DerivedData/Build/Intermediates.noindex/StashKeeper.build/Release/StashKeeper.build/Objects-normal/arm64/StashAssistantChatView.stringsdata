@@ -1,0 +1,64 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Assistant/StashAssistantChatView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Stash Assistant",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ask about your stash",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "I can check what you have, what's expiring, and suggest things to cook — using your inventory and, if you allow it, today's Health activity.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Apple Intelligence isn't available on this device, so answers use simpler on-device logic — direct lookups work, but open-ended questions may not.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ask something…",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "Thinking…",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 256
+        }
+      }
+    ]
+  },
+  "version": 1
+}

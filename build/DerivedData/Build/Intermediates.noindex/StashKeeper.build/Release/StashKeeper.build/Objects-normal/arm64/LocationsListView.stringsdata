@@ -1,0 +1,88 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/LocationsListView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Locations",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld item%@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Locations are created automatically when you add items, or you can add one manually.",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 58
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Locations Yet",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Nothing Kept Here Yet",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Location",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location Name",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Icon",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 140
+        }
+      }
+    ]
+  },
+  "version": 1
+}

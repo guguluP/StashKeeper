@@ -1,0 +1,48 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/AllItemsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "All Items",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sort",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Categories",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Items",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 83
+        }
+      }
+    ]
+  },
+  "version": 1
+}

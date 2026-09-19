@@ -79,9 +79,7 @@ struct AddItemFlowView: View {
     @State private var photoPickerItems: [PhotosPickerItem] = []
     @State private var sourceResults: [SourceResult] = []
     @State private var editingCandidate: (sourceIndex: Int, candidateIndex: Int)?
-    #if os(iOS)
     @State private var showingCamera = false
-    #endif
 
     // Per-candidate editable fields keyed by candidate id, populated on demand.
     @State private var quantityByCandidate: [UUID: Int] = [:]
@@ -157,20 +155,29 @@ struct AddItemFlowView: View {
             }
             #if os(iOS)
             .fullScreenCover(isPresented: $showingCamera) {
-                CameraCaptureView { capturedImages in
-                    showingCamera = false
-                    guard !capturedImages.isEmpty else { return }
-                    Task { await analyzeAllSources(capturedImages) }
-                } onCancel: {
-                    showingCamera = false
-                }
-                .ignoresSafeArea()
+                cameraCaptureSheet
+                    .ignoresSafeArea()
+            }
+            #else
+            .sheet(isPresented: $showingCamera) {
+                cameraCaptureSheet
+                    .frame(minWidth: 640, minHeight: 480)
             }
             #endif
         }
         .sheet(item: editingCandidateBinding) { editing in
             candidateEditSheet(sourceIndex: editing.sourceIndex, candidateIndex: editing.candidateIndex)
                 .sheetPopIn()
+        }
+    }
+
+    private var cameraCaptureSheet: some View {
+        CameraCaptureView { capturedImages in
+            showingCamera = false
+            guard !capturedImages.isEmpty else { return }
+            Task { await analyzeAllSources(capturedImages) }
+        } onCancel: {
+            showingCamera = false
         }
     }
 
@@ -207,7 +214,6 @@ struct AddItemFlowView: View {
             Spacer()
 
             VStack(spacing: 12) {
-                #if os(iOS)
                 if CameraCaptureView.isCameraAvailable {
                     Button {
                         StashHaptics.impact()
@@ -219,7 +225,6 @@ struct AddItemFlowView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                 }
-                #endif
 
                 PhotosPicker(
                     selection: $photoPickerItems,
@@ -778,6 +783,7 @@ struct AddItemFlowView: View {
         }
         try? modelContext.save()
         ItemIntelligenceService.shared.invalidateSessions()
+        reloadWidgets()
         dismiss()
     }
 

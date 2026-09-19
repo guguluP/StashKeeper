@@ -1,0 +1,271 @@
+{
+  "" : {
+    "const-values" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.swiftconstvalues",
+    "dependencies" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.d",
+    "diagnostics" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.dia",
+    "emit-module-dependencies" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary-emit-module.dia",
+    "pch" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.swiftdeps"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Graphics/ConfettiRenderer.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiRenderer.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiRenderer.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiRenderer.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Graphics/ConfettiView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ConfettiView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Intents/StashIntents.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashIntents.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashIntents.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashIntents.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/LiveActivity/StashScanActivityAttributes.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityAttributes.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityAttributes.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityAttributes.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/LiveActivity/StashScanActivityController.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityController.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityController.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashScanActivityController.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/ItemAnalysis.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemAnalysis.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemAnalysis.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemAnalysis.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/Milestone.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/Milestone.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/Milestone.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/Milestone.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/ReceiptModels.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptModels.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptModels.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptModels.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/RecipeSuggestion.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestion.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestion.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestion.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/SharedModelConfiguration.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedModelConfiguration.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedModelConfiguration.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedModelConfiguration.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/StashItem.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItem.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItem.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItem.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Models/StorageLocation.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StorageLocation.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StorageLocation.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StorageLocation.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/BarcodeLookupTelemetry.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeLookupTelemetry.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeLookupTelemetry.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeLookupTelemetry.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/BarcodeScanner.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeScanner.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeScanner.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/BarcodeScanner.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/ExpiryEngine.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ExpiryEngine.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ExpiryEngine.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ExpiryEngine.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/HealthContextTool.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthContextTool.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthContextTool.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthContextTool.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/HealthKitService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthKitService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthKitService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HealthKitService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/HeuristicAssistantEngine.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HeuristicAssistantEngine.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HeuristicAssistantEngine.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/HeuristicAssistantEngine.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/IndianFMCGBarcodeCache.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/IndianFMCGBarcodeCache.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/IndianFMCGBarcodeCache.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/IndianFMCGBarcodeCache.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/InventoryAdjustmentTool.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryAdjustmentTool.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryAdjustmentTool.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryAdjustmentTool.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/InventoryLookupTool.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryLookupTool.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryLookupTool.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/InventoryLookupTool.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/ItemIntelligenceService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemIntelligenceService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemIntelligenceService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemIntelligenceService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/MilestoneEngine.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestoneEngine.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestoneEngine.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestoneEngine.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/NotificationManager.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/NotificationManager.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/NotificationManager.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/NotificationManager.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/PhotoStore.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/PhotoStore.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/PhotoStore.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/PhotoStore.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/ProductLookupService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/ProductLookupTool.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupTool.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupTool.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ProductLookupTool.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/ReceiptScanService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/RecipeSuggestionService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/StashAssistantService.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantService.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantService.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantService.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/StashItemLifecycle.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItemLifecycle.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItemLifecycle.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashItemLifecycle.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/VideoFrameExtractor.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VideoFrameExtractor.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VideoFrameExtractor.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VideoFrameExtractor.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Services/VisionAnalyzer.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VisionAnalyzer.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VisionAnalyzer.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/VisionAnalyzer.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/StashKeeperApp.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeperApp.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeperApp.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeperApp.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/AddItemFlowView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AddItemFlowView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AddItemFlowView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AddItemFlowView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/CameraCaptureView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/CameraCaptureView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/CameraCaptureView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/CameraCaptureView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/DetectionOverlayView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DetectionOverlayView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DetectionOverlayView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DetectionOverlayView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/ItemCandidateEditView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemCandidateEditView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemCandidateEditView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemCandidateEditView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/ReceiptScanView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ReceiptScanView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/RecipeSuggestionsSheet.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionsSheet.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionsSheet.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RecipeSuggestionsSheet.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Assistant/StashAssistantChatView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantChatView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantChatView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashAssistantChatView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/AllItemsView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AllItemsView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AllItemsView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AllItemsView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/DashboardView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DashboardView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DashboardView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/DashboardView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/LocationsListView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/LocationsListView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/LocationsListView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/LocationsListView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/MilestonesView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestonesView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestonesView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MilestonesView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/ItemDetail/ItemDetailView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemDetailView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemDetailView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/ItemDetailView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/MenuBarSummaryView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MenuBarSummaryView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MenuBarSummaryView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/MenuBarSummaryView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/RootView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RootView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RootView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/RootView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Search/SearchView.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SearchView.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SearchView.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SearchView.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Shared/AnimationPrimitives.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AnimationPrimitives.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AnimationPrimitives.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/AnimationPrimitives.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Shared/SharedComponents.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedComponents.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedComponents.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/SharedComponents.o"
+  },
+  "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

@@ -14,10 +14,13 @@ import SwiftUI
 struct StashKeeperWidgetsBundle: WidgetBundle {
     var body: some Widget {
         ExpiringItemsWidget()
+        #if os(iOS)
         StashScanLiveActivity()
+        #endif
     }
 }
 
+#if os(iOS)
 /// Registers the scan-progress Live Activity content with WidgetKit. Kept
 /// as its own `Widget` conformer (rather than folding this directly into
 /// the bundle) so it reads the same way Xcode's own Live Activity template
@@ -59,3 +62,4 @@ struct StashScanLiveActivity: Widget {
         }
     }
 }
+#endif

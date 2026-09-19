@@ -1,0 +1,12 @@
+{
+  "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Graphics/ConfettiRenderer.swift" : {
+    "abi-baseline-json" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper.abi.json",
+    "const-values" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.swiftconstvalues",
+    "dependencies" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.d",
+    "diagnostics" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-primary.dia",
+    "objc-header" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper-Swift.h",
+    "swiftdoc" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper.swiftdoc",
+    "swiftmodule" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper.swiftmodule",
+    "swiftsourceinfo" : "/Users/purushottampatnaik/Desktop/StashKeeper/build/DerivedData/Build/Intermediates.noindex/StashKeeper.build/Release/StashKeeper.build/Objects-normal/arm64/StashKeeper.swiftsourceinfo"
+  }
+}

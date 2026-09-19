@@ -32,8 +32,9 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
-                assistantPromptChip
+            LazyVStack(alignment: .leading, spacing: 28) {
+                todayHero
+                quickActions
 
                 if !attentionItems.isEmpty {
                     attentionSection
@@ -52,19 +53,16 @@ struct DashboardView: View {
                 if !allItems.isEmpty {
                     recentSection
                 } else {
-                    ContentUnavailableView(
-                        "No Items Yet",
-                        systemImage: "shippingbox",
-                        description: Text("Tap the + button to photograph and catalog your first item.")
-                    )
-                    .padding(.top, 60)
+                    emptyInventory
                 }
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
             .opacity(hasAppeared ? 1 : 0)
             .offset(y: hasAppeared ? 0 : 16)
         }
-        .navigationTitle("Dashboard")
+        .background { StashTheme.screenBackground }
+        .navigationTitle("Home")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -91,64 +89,81 @@ struct DashboardView: View {
 
     // MARK: Sections
 
-    /// Collapsed entry point into the full chat screen — a lightweight,
-    /// always-visible chip rather than a full tab, since the assistant is
-    /// used in short bursts ("what can I cook tonight") more often than
-    /// sustained conversation. Mirrors the Siri/Spotlight pattern of a
-    /// small prompt surface that expands into a full screen on tap.
-    private var assistantPromptChip: some View {
-        VStack(spacing: 10) {
-            Button {
-                StashHaptics.impact()
-                showingAssistant = true
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(.blue)
-                    Text("Ask about your stash…")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(12)
-            }
-            .buttonStyle(.pressScale)
-            .glassSurface(cornerRadius: 14)
-
-            Button {
-                StashHaptics.impact()
-                requestRecipeIdeas()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "fork.knife")
-                        .foregroundStyle(.orange)
-                    Text("What can I cook with what I have?")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(12)
-            }
-            .buttonStyle(.pressScale)
-            .glassSurface(cornerRadius: 14)
-
-            Button {
-                StashHaptics.impact()
-                showingReceiptScan = true
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "doc.text.viewfinder")
-                        .foregroundStyle(.purple)
-                    Text("Scan a receipt")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(12)
-            }
-            .buttonStyle(.pressScale)
-            .glassSurface(cornerRadius: 14)
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5..<12: return "Good morning"
+        case 12..<17: return "Good afternoon"
+        default: return "Good evening"
         }
+    }
+
+    private var todayInsight: String {
+        let expired = attentionItems.filter { $0.expiryStatus == .expired }.count
+        if allItems.isEmpty { return "Photograph a shelf or package to start your stash." }
+        if expired > 0 { return "\(expired) expired · \(attentionItems.count) need a look" }
+        if !attentionItems.isEmpty { return "Use the soonest items first — the assistant can cook around them." }
+        return "Nothing urgent. \(allItems.count) items across \(locations.count) places."
+    }
+
+    private var todayHero: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(greeting)
+                .font(.title2.weight(.semibold))
+            Text(todayInsight)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background { StashTheme.heroGradient.opacity(0.55) }
+        .glassSurface(cornerRadius: 24)
+    }
+
+    private var quickActions: some View {
+        HStack(spacing: 10) {
+            quickActionTile(title: "Ask", systemImage: "sparkles", tint: .blue) {
+                showingAssistant = true
+            }
+            quickActionTile(title: "Cook", systemImage: "fork.knife", tint: .orange) {
+                requestRecipeIdeas()
+            }
+            quickActionTile(title: "Receipt", systemImage: "doc.text.viewfinder", tint: .purple) {
+                showingReceiptScan = true
+            }
+        }
+    }
+
+    private func quickActionTile(title: String, systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button {
+            StashHaptics.impact()
+            action()
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.title3)
+                    .foregroundStyle(tint)
+                    .frame(width: 40, height: 40)
+                    .background(tint.opacity(0.15), in: Circle())
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(.pressScale)
+        .glassSurface(cornerRadius: 18, interactive: true)
+    }
+
+    private var emptyInventory: some View {
+        ContentUnavailableView(
+            "No items yet",
+            systemImage: "camera.viewfinder",
+            description: Text("Photograph a fridge shelf, pantry, or receipt. Apple Intelligence names each item and watches expiry.")
+        )
+        .padding(.top, 24)
     }
 
     /// Kicks off on-demand recipe generation from the full current
@@ -208,9 +223,7 @@ struct DashboardView: View {
 
     private var attentionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Needs Attention", systemImage: "exclamationmark.triangle.fill")
-                .font(.headline)
-                .foregroundStyle(.orange)
+            StashSectionHeader(title: "Needs attention", systemImage: "exclamationmark.triangle.fill", tint: .orange)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {

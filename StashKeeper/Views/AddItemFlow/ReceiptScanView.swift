@@ -37,9 +37,7 @@ struct ReceiptScanView: View {
     @State private var confirmedIndices: Set<Int> = []
     @State private var activeItemIndex: Int?
     @State private var showingHeuristicNotice = false
-    #if os(iOS)
     @State private var showingCamera = false
-    #endif
     @State private var selectedPhotoItem: PhotosPickerItem?
 
     var body: some View {
@@ -67,14 +65,13 @@ struct ReceiptScanView: View {
             }
             #if os(iOS)
             .fullScreenCover(isPresented: $showingCamera) {
-                CameraCaptureView { capturedImages in
-                    showingCamera = false
-                    guard let first = capturedImages.first else { return }
-                    Task { await extract(from: first) }
-                } onCancel: {
-                    showingCamera = false
-                }
-                .ignoresSafeArea()
+                receiptCamera
+                    .ignoresSafeArea()
+            }
+            #else
+            .sheet(isPresented: $showingCamera) {
+                receiptCamera
+                    .frame(minWidth: 640, minHeight: 480)
             }
             #endif
             #if os(iOS)
@@ -88,6 +85,16 @@ struct ReceiptScanView: View {
                     .sheetPopIn()
             }
             #endif
+        }
+    }
+
+    private var receiptCamera: some View {
+        CameraCaptureView { capturedImages in
+            showingCamera = false
+            guard let first = capturedImages.first else { return }
+            Task { await extract(from: first) }
+        } onCancel: {
+            showingCamera = false
         }
     }
 
@@ -109,7 +116,6 @@ struct ReceiptScanView: View {
             Spacer()
 
             VStack(spacing: 12) {
-                #if os(iOS)
                 if CameraCaptureView.isCameraAvailable {
                     Button {
                         StashHaptics.impact()
@@ -121,7 +127,6 @@ struct ReceiptScanView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                 }
-                #endif
 
                 PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                     Label("Choose from Photos", systemImage: "photo.on.rectangle.angled")

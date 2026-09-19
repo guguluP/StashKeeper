@@ -1,0 +1,104 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/RecipeSuggestionsSheet.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Recipe Ideas",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add some fresh produce or pantry items to get recipe suggestions.",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Ideas Right Now",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 44
+        }
+      },
+      {
+        "comment": "",
+        "key": "Checking your stash for ideas…",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ kcal / serving",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hide recipe",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show recipe",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ingredients",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "• %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 115
+        }
+      },
+      {
+        "comment": "",
+        "key": "Steps",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld.",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 126
+        }
+      }
+    ]
+  },
+  "version": 1
+}

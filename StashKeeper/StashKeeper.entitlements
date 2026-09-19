@@ -4,32 +4,17 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-	<!-- Outbound HTTPS for barcode product lookup (Open Food Facts / UPCitemdb). -->
 	<key>com.apple.security.network.client</key>
 	<true/>
-	<!--
-	App Group entitlement intentionally omitted for now.
-
-	SharedModelConfiguration.useAppGroupContainer is `false`, so the app
-	never actually needs group.com.piyushpatnaik.StashKeeper at runtime —
-	but simply *declaring* this entitlement while it isn't registered
-	under a real paid-team provisioning profile is enough to make the
-	sandboxed app abort at launch (SIGABRT) before any app code runs,
-	since the OS validates every entitlement in the signed binary against
-	the installed provisioning profile regardless of whether the code
-	ever calls into it.
-
-	Once all three conditions in SharedModelConfiguration.swift are true
-	(widget target added, paid Apple Developer Program team, App Group ID
-	registered + included in both targets' provisioning profiles), re-add:
-		<key>com.apple.security.application-groups</key>
-		<array>
-			<string>group.com.piyushpatnaik.StashKeeper</string>
-		</array>
-	and flip `useAppGroupContainer` to `true`.
-	-->
-	<!-- iOS only capability; ignored on macOS builds that don't use HealthKit. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.piyushpatnaik.StashKeeper</string>
+	</array>
 	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.developer.usernotifications.time-sensitive</key>
+	<true/>
+	<key>com.apple.developer.private-cloud-compute</key>
 	<true/>
 </dict>
 </plist>

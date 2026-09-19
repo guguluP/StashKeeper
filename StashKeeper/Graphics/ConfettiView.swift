@@ -112,8 +112,4 @@ final class Coordinator: NSObject, MTKViewDelegate {
     func draw(in view: MTKView) {
         renderer?.draw(in: view)
     }
-
-    deinit {
-        completionTimer?.invalidate()
-    }
 }

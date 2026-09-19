@@ -26,5 +26,20 @@
 	<string>StashKeeper may read limited activity and dietary summary data to personalize recipe suggestions. It does not sell or share this data.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>StashKeeper can log nutrition facts for food items you choose to send to Apple Health.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>StashKeeper sends reminders when perishable items are about to expire.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.piyushpatnaik.StashKeeper</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>stashkeeper</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

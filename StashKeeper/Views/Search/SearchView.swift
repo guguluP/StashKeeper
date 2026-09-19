@@ -27,6 +27,9 @@ struct SearchView: View {
     var body: some View {
         VStack(spacing: 0) {
             searchField
+            if queryText.isEmpty {
+                suggestionChips
+            }
 
             if let lastIntent, hasStructuredFilter(lastIntent) {
                 interpretedFiltersBar(lastIntent)
@@ -79,8 +82,30 @@ struct SearchView: View {
             }
         }
         .padding(12)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .padding()
+        .glassSurface(cornerRadius: 16)
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    private var suggestionChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(["expiring soon", "in the fridge", "dairy", "passport", "what can I cook"], id: \.self) { chip in
+                    Button {
+                        queryText = chip
+                    } label: {
+                        Text(chip)
+                            .font(.caption.weight(.medium))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                    }
+                    .buttonStyle(.pressScale)
+                    .glassSurface(cornerRadius: 20, interactive: true)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
     }
 
     private func interpretedFiltersBar(_ intent: SearchIntent) -> some View {

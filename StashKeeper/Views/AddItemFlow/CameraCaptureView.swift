@@ -2,19 +2,17 @@
 //  CameraCaptureView.swift
 //  StashKeeper
 //
-//  A custom multi-shot camera screen for the Add Items flow. Unlike
-//  UIImagePickerController (single shot, then dismiss), this lets the user
-//  snap several items in a row without leaving the camera — mirroring the
-//  existing "select up to 10 photos" mental model but for live capture.
-//  Each captured frame is handed back as JPEG Data, identical in shape to
-//  what PhotosPicker already produces, so it drops straight into
-//  AddItemFlowView's existing analyzeAllSources(_:) pipeline with no
-//  changes needed on the analysis side.
+//  Multi-shot camera for the Add Items flow on iOS and macOS.
 //
 
-#if os(iOS)
 import SwiftUI
 @preconcurrency import AVFoundation
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 struct CameraCaptureView: View {
     let onFinish: ([Data]) -> Void
@@ -23,7 +21,12 @@ struct CameraCaptureView: View {
     @State private var model = CameraCaptureModel()
 
     static var isCameraAvailable: Bool {
-        UIImagePickerController.isSourceTypeAvailable(.camera)
+        #if os(iOS)
+        AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil
+            || AVCaptureDevice.default(for: .video) != nil
+        #else
+        AVCaptureDevice.default(for: .video) != nil
+        #endif
     }
 
     var body: some View {
@@ -47,7 +50,9 @@ struct CameraCaptureView: View {
                 shutterBar
             }
         }
+        #if os(iOS)
         .statusBarHidden()
+        #endif
         .onAppear { model.start() }
         .onDisappear { model.stop() }
     }
@@ -64,6 +69,7 @@ struct CameraCaptureView: View {
                     .padding(12)
                     .background(.black.opacity(0.4), in: Circle())
             }
+            .buttonStyle(.plain)
             Spacer()
             if !model.capturedThumbnails.isEmpty {
                 Text("\(model.capturedThumbnails.count) captured")
@@ -82,7 +88,7 @@ struct CameraCaptureView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(Array(model.capturedThumbnails.enumerated()), id: \.offset) { _, thumb in
-                    Image(uiImage: thumb)
+                    thumb.image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 52, height: 52)
@@ -91,49 +97,37 @@ struct CameraCaptureView: View {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .strokeBorder(.white.opacity(0.6), lineWidth: 1.5)
                         }
-                        .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding(.horizontal)
         }
         .padding(.bottom, 12)
-        .animation(.stashSpring, value: model.capturedThumbnails.count)
     }
 
     private var shutterBar: some View {
         HStack {
             Color.clear.frame(width: 64, height: 64)
-
             Spacer()
-
             Button {
                 model.capturePhoto()
             } label: {
                 ZStack {
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 72, height: 72)
-                    Circle()
-                        .strokeBorder(.white, lineWidth: 3)
-                        .frame(width: 84, height: 84)
+                    Circle().fill(.white).frame(width: 72, height: 72)
+                    Circle().strokeBorder(.white, lineWidth: 3).frame(width: 84, height: 84)
                 }
             }
             .buttonStyle(.plain)
             .scaleEffect(model.isCapturing ? 0.85 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.5), value: model.isCapturing)
             .disabled(!model.isAuthorized)
-
             Spacer()
-
             Button {
                 StashHaptics.success()
                 onFinish(model.capturedImageDatas)
             } label: {
                 VStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 30))
-                    Text("Done")
-                        .font(.caption2.weight(.semibold))
+                    Image(systemName: "checkmark.circle.fill").font(.system(size: 30))
+                    Text("Done").font(.caption2.weight(.semibold))
                 }
                 .foregroundStyle(model.capturedThumbnails.isEmpty ? .white.opacity(0.35) : .green)
             }
@@ -154,36 +148,24 @@ struct CameraCaptureView: View {
                 .font(.subheadline)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
+            #if os(iOS)
             Button("Open Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
             }
             .buttonStyle(.borderedProminent)
+            #endif
         }
         .padding(32)
     }
 }
 
-// MARK: - Capture model
+nonisolated struct CaptureThumbnail: Identifiable {
+    let id = UUID()
+    let image: Image
+}
 
-/// Owns the AVCaptureSession lifecycle off the main actor (session
-/// start/stop and photo capture are documented by Apple as blocking calls
-/// that shouldn't run on the main thread) while publishing UI-facing state
-/// back on the main actor. Kept as a separate `nonisolated` coordinator
-/// class — rather than making the whole model `@MainActor` and hopping
-/// queues inline — so the AVCapturePhotoCaptureDelegate conformance itself
-/// never needs to cross an actor boundary to reach the session/output it's
-/// attached to, avoiding Swift 6 Sendable friction with AVFoundation's
-/// non-Sendable capture types.
-/// Explicitly `nonisolated`: this project sets
-/// `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, which would otherwise make
-/// this class implicitly main-actor-isolated — but AVFoundation invokes
-/// `AVCapturePhotoCaptureDelegate` callbacks from its own background
-/// delegate queue, not the main actor, so a main-actor-isolated
-/// conformance can't actually be used there (Swift 6 error). All mutable
-/// state below is already confined to `sessionQueue`, so nonisolated is
-/// also the technically correct annotation, not just a workaround.
 nonisolated private final class CameraSessionCoordinator: NSObject, AVCapturePhotoCaptureDelegate, @unchecked Sendable {
     let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -199,8 +181,13 @@ nonisolated private final class CameraSessionCoordinator: NSObject, AVCapturePho
             self.sessionQueue.async {
                 self.session.beginConfiguration()
                 self.session.sessionPreset = .photo
-
-                if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                #if os(iOS)
+                let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+                    ?? AVCaptureDevice.default(for: .video)
+                #else
+                let device = AVCaptureDevice.default(for: .video)
+                #endif
+                if let device,
                    let input = try? AVCaptureDeviceInput(device: device),
                    self.session.canAddInput(input) {
                     self.session.addInput(input)
@@ -228,9 +215,7 @@ nonisolated private final class CameraSessionCoordinator: NSObject, AVCapturePho
                 return
             }
             self.onPhotoCaptured = completion
-            let settings = AVCapturePhotoSettings()
-            settings.flashMode = .auto
-            self.output.capturePhoto(with: settings, delegate: self)
+            self.output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
         }
     }
 
@@ -254,7 +239,7 @@ private final class CameraCaptureModel {
 
     var isAuthorized = false
     var isCapturing = false
-    var capturedThumbnails: [UIImage] = []
+    var capturedThumbnails: [CaptureThumbnail] = []
     private(set) var capturedImageDatas: [Data] = []
 
     func start() {
@@ -279,16 +264,25 @@ private final class CameraCaptureModel {
                 self.isCapturing = false
                 guard let data else { return }
                 self.capturedImageDatas.append(data)
-                if let image = UIImage(data: data) {
-                    self.capturedThumbnails.append(image)
+                if let image = Self.makeThumbnail(from: data) {
+                    self.capturedThumbnails.append(CaptureThumbnail(image: image))
                 }
             }
         }
     }
+
+    private static func makeThumbnail(from data: Data) -> Image? {
+        #if canImport(UIKit)
+        if let ui = UIImage(data: data) { return Image(uiImage: ui) }
+        #endif
+        #if canImport(AppKit)
+        if let ns = NSImage(data: data) { return Image(nsImage: ns) }
+        #endif
+        return nil
+    }
 }
 
-// MARK: - Preview layer bridge
-
+#if os(iOS)
 private struct CameraPreviewLayer: UIViewRepresentable {
     let session: AVCaptureSession
 
@@ -304,6 +298,37 @@ private struct CameraPreviewLayer: UIViewRepresentable {
     final class PreviewUIView: UIView {
         override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
         var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+    }
+}
+#else
+private struct CameraPreviewLayer: NSViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeNSView(context: Context) -> PreviewNSView {
+        let view = PreviewNSView()
+        view.previewLayer.session = session
+        view.previewLayer.videoGravity = .resizeAspectFill
+        view.wantsLayer = true
+        return view
+    }
+
+    func updateNSView(_ nsView: PreviewNSView, context: Context) {}
+
+    final class PreviewNSView: NSView {
+        let previewLayer = AVCaptureVideoPreviewLayer()
+
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            wantsLayer = true
+            layer = previewLayer
+        }
+
+        required init?(coder: NSCoder) { nil }
+
+        override func layout() {
+            super.layout()
+            previewLayer.frame = bounds
+        }
     }
 }
 #endif

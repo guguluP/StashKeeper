@@ -8,6 +8,15 @@
 
 import SwiftUI
 import SwiftData
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
+
+func reloadWidgets() {
+    #if canImport(WidgetKit)
+    WidgetCenter.shared.reloadAllTimelines()
+    #endif
+}
 
 /// Swipeable carousel of every photo an item has (a single photo shows as
 /// a static image with no page dots), used in Item Detail so the extra
@@ -307,6 +316,7 @@ struct ItemRowInteractions: ViewModifier {
         item.quantity = max(0, item.quantity + delta)
         item.updatedAt = .now
         try? modelContext.save()
+        reloadWidgets()
     }
 }
 
@@ -350,11 +360,11 @@ struct ItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ItemThumbnail(item: item)
+            ItemThumbnail(item: item, size: 52)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
-                    .font(.body.weight(.medium))
+                    .font(.body.weight(.semibold))
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
@@ -363,39 +373,26 @@ struct ItemRow: View {
                         Text("·")
                         Text(location.name)
                     }
-                    if item.quantity > 1 {
-                        Text("·")
-                        Text("×\(item.quantity)")
-                    }
+                    Text("·")
+                    Text("×\(item.quantity)")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+
+                ExpiryBadge(item: item)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if let formattedPrice = item.formattedPrice {
                 Text(formattedPrice)
-                    .font(.caption.weight(.medium))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())
-                    .transition(.opacity)
-            }
-
-            if item.isPerishable {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Image(systemName: item.expiryStatus.systemImage)
-                        .foregroundStyle(item.expiryStatus.tint)
-                    if let days = item.daysUntilExpiry {
-                        Text(days < 0 ? "Expired" : "\(days)d")
-                            .font(.caption2)
-                            .foregroundStyle(item.expiryStatus.tint)
-                    }
-                }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         #if os(macOS)
         .padding(.horizontal, 6)
         .background(

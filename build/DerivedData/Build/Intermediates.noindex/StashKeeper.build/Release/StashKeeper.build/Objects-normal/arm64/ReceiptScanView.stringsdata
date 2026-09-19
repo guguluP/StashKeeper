@@ -1,0 +1,112 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/ReceiptScanView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Scan Receipt",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 59,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "Photograph your receipt",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 102
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lay the bill flat and capture the whole thing in good light. Apple Intelligence will pull out each purchased item so you can catalog them one by one.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose from Photos",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reading your receipt…",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "Couldn't identify any purchased items on this receipt. You can still add items normally from the Dashboard.",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 199
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Items Found",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld of %lld cataloged",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "Qty %lld · %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "Apple Intelligence isn't available, so items were extracted with simpler logic — double-check names and prices before confirming.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 289
+        }
+      }
+    ]
+  },
+  "version": 1
+}

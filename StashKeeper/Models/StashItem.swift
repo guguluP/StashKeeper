@@ -10,12 +10,16 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+nonisolated private final class FormatterCache: @unchecked Sendable {
+    let cache = NSCache<NSString, NumberFormatter>()
+}
+
 @Model
 final class StashItem {
 
     // MARK: Identity
 
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var createdAt: Date
     var updatedAt: Date
 
@@ -214,8 +218,8 @@ extension StashItem {
         }
     }
 
-    /// Days before expiry we start warning the user. Could become user-configurable.
-    static let warningWindowDays = 5
+    /// Days before expiry we start warning the user.
+    static var warningWindowDays: Int { StashSettings.currentWarningWindowDays }
 
     var expiryStatus: ExpiryStatus {
         guard isPerishable, let expiryDate else { return .notPerishable }
@@ -256,22 +260,59 @@ extension StashItem {
 
     /// Cached formatters keyed by currency code — creating a NumberFormatter
     /// per access is relatively expensive when rows bind this in lists.
-    private static let currencyFormatterCache = NSCache<NSString, NumberFormatter>()
+    private static let currencyFormatterCache = FormatterCache()
 
     private static func currencyFormatter(for currencyCode: String) -> NumberFormatter {
         let key = currencyCode as NSString
-        if let cached = currencyFormatterCache.object(forKey: key) {
+        if let cached = currencyFormatterCache.cache.object(forKey: key) {
             return cached
         }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = currencyCode
-        currencyFormatterCache.setObject(formatter, forKey: key)
+        currencyFormatterCache.cache.setObject(formatter, forKey: key)
         return formatter
     }
 
     /// Whether this item has any recorded nutrition information.
     var hasNutrition: Bool {
         nutritionCalories != nil || nutritionProteinGrams != nil || nutritionCarbsGrams != nil
+    }
+
+    static func needingAttention(in items: [StashItem]) -> [StashItem] {
+        items
+            .filter { $0.expiryStatus == .expiringSoon || $0.expiryStatus == .expired }
+            .sorted { lhs, rhs in
+                (lhs.expiryDate ?? .distantFuture) < (rhs.expiryDate ?? .distantFuture)
+            }
+    }
+
+    /// Decrement by one unit. Quantity 0 stays as an empty row so widgets
+    /// and the assistant can still refer to it; the user deletes explicitly.
+    @MainActor
+    @discardableResult
+    func consumeOneUnit(in context: ModelContext) -> Int {
+        quantity = max(0, quantity - 1)
+        updatedAt = .now
+        try? context.save()
+        return quantity
+    }
+
+    @MainActor
+    func snoozeExpiry(days: Int = 1, in context: ModelContext) {
+        let base = expiryDate ?? .now
+        expiryDate = Calendar.current.date(byAdding: .day, value: days, to: base) ?? base
+        expiryUserConfirmed = true
+        isPerishable = true
+        updatedAt = .now
+        try? context.save()
+    }
+
+    var expiryCaption: String {
+        guard isPerishable, let days = daysUntilExpiry else { return "" }
+        if days < 0 { return "Expired \(-days)d ago" }
+        if days == 0 { return "Expires today" }
+        if days == 1 { return "Expires tomorrow" }
+        return "\(days)d left"
     }
 }

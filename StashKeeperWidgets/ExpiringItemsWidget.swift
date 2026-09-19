@@ -2,21 +2,16 @@
 //  ExpiringItemsWidget.swift
 //  StashKeeperWidgetsExtension
 //
-//  Home screen / Lock Screen widget surfacing items that are expiring soon,
-//  so the user doesn't need to open the app to see what needs attention.
-//  Registered in StashKeeperWidgetsBundle.swift, the extension's @main
-//  entry point. Reads from the App Group-shared SwiftData store (see
-//  SharedModelConfiguration.swift) so it reflects the same live inventory
-//  data the main app sees.
-//
 
 import WidgetKit
 import SwiftUI
 import SwiftData
+import AppIntents
 
 struct ExpiringItemsEntry: TimelineEntry {
     let date: Date
     let items: [ExpiringItemSummary]
+    let insight: String
 }
 
 struct ExpiringItemSummary: Identifiable {
@@ -25,52 +20,64 @@ struct ExpiringItemSummary: Identifiable {
     let locationName: String
     let daysUntilExpiry: Int
     let isExpired: Bool
+    let quantity: Int
 }
 
-struct ExpiringItemsProvider: TimelineProvider {
-
-    func placeholder(in context: Context) -> ExpiringItemsEntry {
-        ExpiringItemsEntry(date: .now, items: [
-            ExpiringItemSummary(id: UUID(), name: "Milk", locationName: "Fridge", daysUntilExpiry: 2, isExpired: false)
-        ])
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (ExpiringItemsEntry) -> Void) {
-        // Use live inventory for Widget Gallery / previews when available;
-        // fall back to the static placeholder only if the shared store is empty
-        // or unavailable (e.g. App Group not yet configured).
-        let summaries = fetchExpiringSummaries()
-        if summaries.isEmpty && context.isPreview {
-            completion(placeholder(in: context))
-        } else {
-            completion(ExpiringItemsEntry(date: .now, items: summaries))
-        }
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ExpiringItemsEntry>) -> Void) {
-        let summaries = fetchExpiringSummaries()
-        let entry = ExpiringItemsEntry(date: .now, items: summaries)
-        // Refresh every couple hours; also re-synced whenever the app writes data.
-        let nextRefresh = Calendar.current.date(byAdding: .hour, value: 2, to: .now) ?? .now
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
-    }
-
-    private func fetchExpiringSummaries() -> [ExpiringItemSummary] {
+enum ExpiringItemsLoader {
+    static func fetch() -> (items: [ExpiringItemSummary], insight: String) {
         let container = SharedModelConfiguration.makeContainer()
-
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<StashItem>()
-        guard let items = try? context.fetch(descriptor) else { return [] }
-
-        return ExpiryEngine.shared.attentionNeeded(items: items).prefix(5).map { item in
+        guard let items = try? context.fetch(descriptor) else {
+            return ([], "Add items in StashKeeper to see expiry here.")
+        }
+        let attention = StashItem.needingAttention(in: items)
+        let summaries = attention.prefix(5).map { item in
             ExpiringItemSummary(
                 id: item.id,
                 name: item.name,
                 locationName: item.location?.name ?? "Unsorted",
                 daysUntilExpiry: item.daysUntilExpiry ?? 0,
-                isExpired: item.expiryStatus == .expired
+                isExpired: item.expiryStatus == .expired,
+                quantity: item.quantity
             )
         }
+        let expired = attention.filter { $0.expiryStatus == .expired }.count
+        let insight: String
+        if attention.isEmpty {
+            insight = items.isEmpty ? "Your stash is empty — photograph something to start." : "All clear. Nothing expiring in the warning window."
+        } else if expired > 0 {
+            insight = "\(expired) expired · \(attention.count) need attention"
+        } else {
+            insight = "\(attention.count) item\(attention.count == 1 ? "" : "s") expiring soon"
+        }
+        return (Array(summaries), insight)
+    }
+}
+
+struct ExpiringItemsProvider: TimelineProvider {
+    func placeholder(in context: Context) -> ExpiringItemsEntry {
+        ExpiringItemsEntry(
+            date: .now,
+            items: [ExpiringItemSummary(id: UUID(), name: "Milk", locationName: "Fridge", daysUntilExpiry: 2, isExpired: false, quantity: 1)],
+            insight: "2 items expiring soon"
+        )
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (ExpiringItemsEntry) -> Void) {
+        let loaded = ExpiringItemsLoader.fetch()
+        if loaded.items.isEmpty && context.isPreview {
+            completion(placeholder(in: context))
+        } else {
+            completion(ExpiringItemsEntry(date: .now, items: loaded.items, insight: loaded.insight))
+        }
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<ExpiringItemsEntry>) -> Void) {
+        let loaded = ExpiringItemsLoader.fetch()
+        let entry = ExpiringItemsEntry(date: .now, items: loaded.items, insight: loaded.insight)
+        let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now
+        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
 }
 
@@ -79,41 +86,128 @@ struct ExpiringItemsWidgetView: View {
     let entry: ExpiringItemsEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
+        switch family {
+        case .systemSmall:
+            smallLayout
+        #if os(iOS)
+        case .accessoryCircular:
+            Gauge(value: Double(min(entry.items.count, 5)), in: 0...5) {
                 Image(systemName: "clock.badge.exclamationmark")
-                    .foregroundStyle(.orange)
-                Text("Expiring Soon")
+            } currentValueLabel: {
+                Text("\(entry.items.count)")
+            }
+            .gaugeStyle(.accessoryCircular)
+            .tint(.orange)
+        case .accessoryRectangular:
+            VStack(alignment: .leading) {
+                Text("Expiring")
                     .font(.headline)
+                Text(entry.insight)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        #endif
+        default:
+            mediumLargeLayout
+        }
+    }
+
+    private var smallLayout: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Expiring", systemImage: "clock.badge.exclamationmark")
+                .font(.headline)
+                .foregroundStyle(.orange)
+            if let first = entry.items.first {
+                Text(first.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                Text(first.isExpired ? "Expired" : first.daysUntilExpiry == 0 ? "Today" : "\(first.daysUntilExpiry)d · \(first.locationName)")
+                    .font(.caption)
+                    .foregroundStyle(first.isExpired ? .red : .secondary)
+                Spacer()
+                Button(intent: ConsumeStashItemIntent(itemID: first.id)) {
+                    Label("Used 1", systemImage: "minus.circle.fill")
+                        .font(.caption.weight(.semibold))
+                }
+                .tint(.orange)
+            } else {
+                Spacer()
+                Text(entry.insight)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .containerBackground(for: .widget) {
+            LinearGradient(colors: [Color.orange.opacity(0.22), Color.black.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
+
+    private var mediumLargeLayout: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Needs attention", systemImage: "clock.badge.exclamationmark")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+                Spacer()
+                Text("\(entry.items.count)")
+                    .font(.caption.weight(.bold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.orange.opacity(0.2), in: Capsule())
             }
 
+            Text(entry.insight)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             if entry.items.isEmpty {
+                Spacer()
                 Text("All clear")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.title3.weight(.semibold))
             } else {
                 ForEach(visibleItems) { item in
-                    HStack {
-                        Text(item.name)
-                            .font(.caption)
-                            .lineLimit(1)
+                    HStack(spacing: 8) {
+                        Link(destination: URL(string: "stashkeeper://item/\(item.id.uuidString)")!) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(item.name)
+                                    .font(.subheadline.weight(.medium))
+                                    .lineLimit(1)
+                                    .foregroundStyle(.primary)
+                                Text(item.locationName)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                         Spacer()
-                        Text(item.isExpired ? "Expired" : "\(item.daysUntilExpiry)d")
-                            .font(.caption2.weight(.semibold))
+                        Text(item.isExpired ? "Expired" : item.daysUntilExpiry == 0 ? "Today" : "\(item.daysUntilExpiry)d")
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(item.isExpired ? .red : .orange)
+                            .frame(width: 52, alignment: .trailing)
+                        Button(intent: ConsumeStashItemIntent(itemID: item.id)) {
+                            Image(systemName: "minus.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                        .tint(.orange)
+                        Button(intent: SnoozeStashItemIntent(itemID: item.id)) {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                        .buttonStyle(.plain)
+                        .tint(.blue)
                     }
                 }
             }
+            Spacer(minLength: 0)
         }
-        .padding()
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(for: .widget) {
+            LinearGradient(colors: [Color.orange.opacity(0.18), Color.accentColor.opacity(0.08)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
     }
 
     private var visibleItems: [ExpiringItemSummary] {
         switch family {
-        case .systemSmall: return Array(entry.items.prefix(2))
-        case .systemMedium: return Array(entry.items.prefix(4))
-        default: return entry.items
+        case .systemSmall: return Array(entry.items.prefix(1))
+        case .systemMedium: return Array(entry.items.prefix(3))
+        default: return Array(entry.items.prefix(5))
         }
     }
 }
@@ -126,7 +220,14 @@ struct ExpiringItemsWidget: Widget {
             ExpiringItemsWidgetView(entry: entry)
         }
         .configurationDisplayName("Expiring Items")
-        .description("Shows items in your stash that are expiring soon.")
+        .description("See what's expiring and mark something used without opening the app.")
+        #if os(iOS)
+        .supportedFamilies([
+            .systemSmall, .systemMedium, .systemLarge,
+            .accessoryCircular, .accessoryRectangular
+        ])
+        #else
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        #endif
     }
 }

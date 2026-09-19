@@ -22,6 +22,7 @@ struct RootView: View {
         case locations = "Locations"
         case allItems = "All Items"
         case milestones = "Milestones"
+        case settings = "Settings"
 
         var id: String { rawValue }
 
@@ -32,6 +33,7 @@ struct RootView: View {
             case .locations: return "archivebox"
             case .allItems: return "list.bullet"
             case .milestones: return "rosette"
+            case .settings: return "gearshape"
             }
         }
     }
@@ -63,24 +65,32 @@ struct RootView: View {
     #if os(iOS)
     @ViewBuilder
     private var compactLayout: some View {
-        ZStack(alignment: .bottomTrailing) {
-            TabView(selection: $selectedSection) {
-                ForEach(Section.allCases) { section in
-                    NavigationStack {
-                        tabDestinationView(for: section)
-                    }
-                    .tabItem {
-                        Label(section.rawValue, systemImage: section.systemImage)
+        TabView(selection: $selectedSection) {
+                ForEach(Section.allCases.filter { $0 != .search }) { section in
+                    Tab(section.rawValue, systemImage: section.systemImage, value: Optional(section)) {
+                        NavigationStack {
+                            tabDestinationView(for: section)
+                                .toolbar {
+                                    ToolbarItem(placement: .primaryAction) {
+                                        Button {
+                                            StashHaptics.impact()
+                                            showingAddItem = true
+                                        } label: {
+                                            Image(systemName: "plus.circle.fill")
+                                        }
+                                        .accessibilityLabel("Add Item")
+                                    }
+                                }
+                        }
                     }
                     .badge(badgeCount(for: section))
-                    .tag(Optional(section))
+                }
+                Tab("Search", systemImage: "magnifyingglass", value: Optional(Section.search), role: .search) {
+                    NavigationStack {
+                        SearchView()
+                    }
                 }
             }
-
-            addItemFloatingButton
-                .padding(.trailing, 20)
-                .padding(.bottom, 78) // clears the tab bar
-        }
         .sheet(isPresented: $showingAddItem) {
             AddItemFlowView()
                 .sheetPopIn()
@@ -97,6 +107,7 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .stashItemNotificationAction)) { notification in
             handleNotificationAction(notification)
         }
+        .onOpenURL(perform: handleOpenURL)
     }
 
     /// Each tab hosts a section directly (not through `destinationView`,
@@ -111,23 +122,10 @@ struct RootView: View {
         case .locations: LocationsListView()
         case .allItems: AllItemsView()
         case .milestones: MilestonesView()
+        case .settings: SettingsView()
         }
     }
 
-    private var addItemFloatingButton: some View {
-        Button {
-            StashHaptics.impact()
-            showingAddItem = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(Color.accentColor, in: Circle())
-                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-        }
-        .accessibilityLabel("Add Item")
-    }
     #endif
 
     // MARK: - iPad / macOS layout (regular width)
@@ -191,6 +189,7 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .stashItemNotificationAction)) { notification in
             handleNotificationAction(notification)
         }
+        .onOpenURL(perform: handleOpenURL)
     }
 
     /// Bridges `routedItemID` (set when a notification is tapped) to a
@@ -215,12 +214,26 @@ struct RootView: View {
             AllItemsView()
         case .milestones:
             MilestonesView()
+        case .settings:
+            SettingsView()
         }
     }
 
     private func badgeCount(for section: Section) -> Int {
         guard section == .dashboard else { return 0 }
         return ExpiryEngine.shared.attentionNeeded(items: allItems).count
+    }
+
+    private func handleOpenURL(_ url: URL) {
+        guard url.scheme == "stashkeeper" else { return }
+        if url.host == "item" {
+            let idString = url.pathComponents.last ?? url.host
+            if let idString, let id = UUID(uuidString: idString) {
+                routedItemID = id
+            }
+        } else if url.host == "add" {
+            showingAddItem = true
+        }
     }
 
     private func handleNotificationAction(_ notification: Notification) {

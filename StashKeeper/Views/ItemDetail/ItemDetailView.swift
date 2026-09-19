@@ -26,10 +26,49 @@ struct ItemDetailView: View {
             Section {
                 HStack {
                     Spacer()
-                    PhotoCarouselView(item: item, size: 160)
+                    PhotoCarouselView(item: item, size: 168)
                     Spacer()
                 }
                 .padding(.vertical, 8)
+                if item.isPerishable {
+                    HStack {
+                        Image(systemName: item.expiryStatus.systemImage)
+                            .foregroundStyle(item.expiryStatus.tint)
+                        Text(item.expiryCaption)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(item.expiryStatus.tint)
+                        Spacer()
+                    }
+                    .padding(10)
+                    .background(item.expiryStatus.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                HStack(spacing: 10) {
+                    Button {
+                        StashHaptics.alignment()
+                        _ = item.consumeOneUnit(in: modelContext)
+                        reloadWidgets()
+                    } label: {
+                        Label("Used 1", systemImage: "minus.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.orange)
+                    .disabled(item.quantity == 0)
+
+                    if item.isPerishable {
+                        Button {
+                            StashHaptics.alignment()
+                            item.snoozeExpiry(days: 1, in: modelContext)
+                            Task { await ExpiryEngine.shared.syncNotifications(for: item) }
+                            reloadWidgets()
+                        } label: {
+                            Label("Tomorrow", systemImage: "clock")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.blue)
+                    }
+                }
             }
             .listRowBackground(Color.clear)
             .opacity(showFullFields ? 1 : 0)

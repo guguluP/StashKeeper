@@ -6,8 +6,45 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7F3A06122FFFA200009FE963 /* StashKeeperWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7F3A06002FFFA200009FE963 /* StashKeeperWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7F3A060E2FFFA200009FE963 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F3A04A82FFFA16F009FE963 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7F3A06012FFFA200009FE963;
+			remoteInfo = StashKeeperWidgets;
+		};
+		7F3A061E2FFFA200009FE963 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F3A04A82FFFA16F009FE963 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7F3A04AF2FFFA16F009FE963;
+			remoteInfo = StashKeeper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7F3A060C2FFFA200009FE963 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7F3A06122FFFA200009FE963 /* StashKeeperWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		7F3A04B02FFFA16F009FE963 /* StashKeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StashKeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7F3A06002FFFA200009FE963 /* StashKeeperWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StashKeeperWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7F3A06102FFFA200009FE963 /* StashKeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StashKeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -15,8 +52,34 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				StashKeeper.entitlements,
+				StashKeeper.macos.entitlements,
 			);
 			target = 7F3A04AF2FFFA16F009FE963 /* StashKeeper */;
+		};
+		7F3A06062FFFA200009FE963 /* Exceptions for "StashKeeperWidgets" folder in "StashKeeperWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				StashKeeperWidgetsExtension.entitlements,
+			);
+			target = 7F3A06012FFFA200009FE963 /* StashKeeperWidgets */;
+		};
+		7F3A06202FFFA200009FE963 /* Exceptions for "Models" folder in "StashKeeperWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ItemAnalysis.swift,
+				RecipeSuggestion.swift,
+				ReceiptModels.swift,
+			);
+			target = 7F3A06012FFFA200009FE963 /* StashKeeperWidgets */;
+		};
+		7F3A060B2FFFA200009FE963 /* Exceptions for "LiveActivity" folder in "StashKeeperWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				StashScanActivityController.swift,
+			);
+			target = 7F3A06012FFFA200009FE963 /* StashKeeperWidgets */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -29,10 +92,49 @@
 			path = StashKeeper;
 			sourceTree = "<group>";
 		};
+		7F3A06052FFFA200009FE963 /* StashKeeperWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7F3A06062FFFA200009FE963 /* Exceptions for "StashKeeperWidgets" folder in "StashKeeperWidgets" target */,
+			);
+			path = StashKeeperWidgets;
+			sourceTree = "<group>";
+		};
+		7F3A060A2FFFA200009FE963 /* Models for widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7F3A06202FFFA200009FE963 /* Exceptions for "Models" folder in "StashKeeperWidgets" target */,
+			);
+			path = StashKeeper/Models;
+			sourceTree = "<group>";
+		};
+		7F3A060F2FFFA200009FE963 /* LiveActivity for widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7F3A060B2FFFA200009FE963 /* Exceptions for "LiveActivity" folder in "StashKeeperWidgets" target */,
+			);
+			path = StashKeeper/LiveActivity;
+			sourceTree = "<group>";
+		};
+		7F3A06132FFFA200009FE963 /* StashKeeperTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StashKeeperTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		7F3A04AD2FFFA16F009FE963 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		7F3A06032FFFA200009FE963 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		7F3A06152FFFA200009FE963 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -44,6 +146,8 @@
 			isa = PBXGroup;
 			children = (
 				7F3A04B22FFFA16F009FE963 /* StashKeeper */,
+				7F3A06052FFFA200009FE963 /* StashKeeperWidgets */,
+				7F3A06132FFFA200009FE963 /* StashKeeperTests */,
 				7F3A04B12FFFA16F009FE963 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +156,8 @@
 			isa = PBXGroup;
 			children = (
 				7F3A04B02FFFA16F009FE963 /* StashKeeper.app */,
+				7F3A06002FFFA200009FE963 /* StashKeeperWidgets.appex */,
+				7F3A06102FFFA200009FE963 /* StashKeeperTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -66,8 +172,12 @@
 				7F3A04AC2FFFA16F009FE963 /* Sources */,
 				7F3A04AD2FFFA16F009FE963 /* Frameworks */,
 				7F3A04AE2FFFA16F009FE963 /* Resources */,
+				7F3A060C2FFFA200009FE963 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				7F3A060D2FFFA200009FE963 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7F3A04B22FFFA16F009FE963 /* StashKeeper */,
@@ -76,6 +186,49 @@
 			productName = StashKeeper;
 			productReference = 7F3A04B02FFFA16F009FE963 /* StashKeeper.app */;
 			productType = "com.apple.product-type.application";
+		};
+		7F3A06012FFFA200009FE963 /* StashKeeperWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7F3A06092FFFA200009FE963 /* Build configuration list for PBXNativeTarget "StashKeeperWidgets" */;
+			buildPhases = (
+				7F3A06022FFFA200009FE963 /* Sources */,
+				7F3A06032FFFA200009FE963 /* Frameworks */,
+				7F3A06042FFFA200009FE963 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7F3A06052FFFA200009FE963 /* StashKeeperWidgets */,
+				7F3A060A2FFFA200009FE963 /* Models for widgets */,
+				7F3A060F2FFFA200009FE963 /* LiveActivity for widgets */,
+			);
+			name = StashKeeperWidgets;
+			productName = StashKeeperWidgets;
+			productReference = 7F3A06002FFFA200009FE963 /* StashKeeperWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		7F3A06112FFFA200009FE963 /* StashKeeperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7F3A06192FFFA200009FE963 /* Build configuration list for PBXNativeTarget "StashKeeperTests" */;
+			buildPhases = (
+				7F3A06142FFFA200009FE963 /* Sources */,
+				7F3A06152FFFA200009FE963 /* Frameworks */,
+				7F3A06162FFFA200009FE963 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7F3A061F2FFFA200009FE963 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7F3A06132FFFA200009FE963 /* StashKeeperTests */,
+			);
+			name = StashKeeperTests;
+			productName = StashKeeperTests;
+			productReference = 7F3A06102FFFA200009FE963 /* StashKeeperTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -88,6 +241,12 @@
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					7F3A04AF2FFFA16F009FE963 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7F3A06012FFFA200009FE963 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7F3A06112FFFA200009FE963 = {
 						CreatedOnToolsVersion = 27.0;
 					};
 				};
@@ -107,12 +266,24 @@
 			projectRoot = "";
 			targets = (
 				7F3A04AF2FFFA16F009FE963 /* StashKeeper */,
+				7F3A06012FFFA200009FE963 /* StashKeeperWidgets */,
+				7F3A06112FFFA200009FE963 /* StashKeeperTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		7F3A04AE2FFFA16F009FE963 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		7F3A06042FFFA200009FE963 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		7F3A06162FFFA200009FE963 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -125,7 +296,30 @@
 			files = (
 			);
 		};
+		7F3A06022FFFA200009FE963 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		7F3A06142FFFA200009FE963 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7F3A060D2FFFA200009FE963 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7F3A06012FFFA200009FE963 /* StashKeeperWidgets */;
+			targetProxy = 7F3A060E2FFFA200009FE963 /* PBXContainerItemProxy */;
+		};
+		7F3A061F2FFFA200009FE963 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7F3A04AF2FFFA16F009FE963 /* StashKeeper */;
+			targetProxy = 7F3A061E2FFFA200009FE963 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		7F3A04BF2FFFA171009FE963 /* Debug configuration for PBXNativeTarget "StashKeeper" */ = {
@@ -134,6 +328,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StashKeeper/StashKeeper.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = StashKeeper/StashKeeper.macos.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=xros*]" = StashKeeper/StashKeeper.macos.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=xrsimulator*]" = StashKeeper/StashKeeper.macos.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U65M73K349;
@@ -153,6 +350,8 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_NSSupportsLiveActivities[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_NSSupportsLiveActivities[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -168,14 +367,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 27.0;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -185,6 +384,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StashKeeper/StashKeeper.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = StashKeeper/StashKeeper.macos.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=xros*]" = StashKeeper/StashKeeper.macos.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=xrsimulator*]" = StashKeeper/StashKeeper.macos.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U65M73K349;
@@ -204,6 +406,8 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_NSSupportsLiveActivities[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_NSSupportsLiveActivities[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -219,14 +423,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 27.0;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -346,6 +550,120 @@
 			};
 			name = Release;
 		};
+		7F3A06072FFFA200009FE963 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StashKeeperWidgets/StashKeeperWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U65M73K349;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StashKeeperWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StashKeeper;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piyushpatnaik.StashKeeper.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7F3A06082FFFA200009FE963 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StashKeeperWidgets/StashKeeperWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U65M73K349;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StashKeeperWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StashKeeper;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piyushpatnaik.StashKeeper.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7F3A06172FFFA200009FE963 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U65M73K349;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piyushpatnaik.StashKeeperTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StashKeeper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StashKeeper";
+			};
+			name = Debug;
+		};
+		7F3A06182FFFA200009FE963 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U65M73K349;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piyushpatnaik.StashKeeperTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StashKeeper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StashKeeper";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -362,6 +680,22 @@
 			buildConfigurations = (
 				7F3A04BF2FFFA171009FE963 /* Debug configuration for PBXNativeTarget "StashKeeper" */,
 				7F3A04C02FFFA171009FE963 /* Release configuration for PBXNativeTarget "StashKeeper" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7F3A06092FFFA200009FE963 /* Build configuration list for PBXNativeTarget "StashKeeperWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7F3A06072FFFA200009FE963 /* Debug */,
+				7F3A06082FFFA200009FE963 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7F3A06192FFFA200009FE963 /* Build configuration list for PBXNativeTarget "StashKeeperTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7F3A06172FFFA200009FE963 /* Debug */,
+				7F3A06182FFFA200009FE963 /* Release */,
 			);
 			defaultConfigurationName = Release;
 		};

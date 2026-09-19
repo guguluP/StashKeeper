@@ -1,0 +1,136 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/Dashboard/DashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Dashboard",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap the + button to photograph and catalog your first item.",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 58
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Items Yet",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ask about your stash…",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "What can I cook with what I have?",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Scan a receipt",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 142
+        }
+      },
+      {
+        "comment": "",
+        "key": "Almost There",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "See All",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Needs Attention",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "Locations",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 251
+        }
+      },
+      {
+        "comment": "",
+        "key": "See All",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 253
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recently Added",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 275
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expired",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 381
+        }
+      },
+      {
+        "comment": "",
+        "key": "Today",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 381
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldd left",
+        "location": {
+          "startingColumn": 67,
+          "startingLine": 381
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 414
+        }
+      }
+    ]
+  },
+  "version": 1
+}

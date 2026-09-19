@@ -17,7 +17,7 @@ struct StashKeeperApp: App {
     let modelContainer: ModelContainer
 
     init() {
-        modelContainer = SharedModelConfiguration.makeContainer()
+        modelContainer = ModelContainerProvider.shared
     }
 
     var body: some Scene {

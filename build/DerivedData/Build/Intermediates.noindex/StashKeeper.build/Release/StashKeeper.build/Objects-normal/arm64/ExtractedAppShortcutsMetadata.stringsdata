@@ -1,0 +1,193 @@
+{
+  "source" : "\/Users\/purushottampatnaik\/Desktop\/StashKeeper\/StashKeeper\/Intents\/StashIntents.swift",
+  "tables" : {
+    "AppShortcuts" : [
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "WhatsExpiringIntent",
+            "index" : 0,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "What's Expiring Soon"
+          }
+        ],
+        "key" : "What's expiring soon in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "What's expiring soon in ${applicationName}",
+          "Check ${applicationName} for expiring items"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "FindItemIntent",
+            "index" : 1,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "Find an Item in Storage"
+          }
+        ],
+        "key" : "Find an item in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "Find an item in ${applicationName}",
+          "Where is my item in ${applicationName}"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "HowManyItemsIntent",
+            "index" : 2,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "How Many of an Item"
+          }
+        ],
+        "key" : "How many items do I have in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "How many items do I have in ${applicationName}",
+          "Check my item count in ${applicationName}"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "ItemsInLocationIntent",
+            "index" : 3,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "List Items in a Location"
+          }
+        ],
+        "key" : "What's in my storage location in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "What's in my storage location in ${applicationName}",
+          "List items by location in ${applicationName}"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "ItemsInCategoryIntent",
+            "index" : 4,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "List Items by Category"
+          }
+        ],
+        "key" : "List my items by category in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "List my items by category in ${applicationName}",
+          "What category items do I have in ${applicationName}"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "TotalInventoryValueIntent",
+            "index" : 5,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "Total Inventory Value"
+          }
+        ],
+        "key" : "How much is my stuff worth in ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "How much is my stuff worth in ${applicationName}",
+          "Total inventory value in ${applicationName}"
+        ]
+      },
+      {
+        "appShortcutMetadata" : [
+          {
+            "actionIdentifier" : "QuickAddItemIntent",
+            "index" : 6,
+            "parameterDisplayRepresentations" : {
+
+            },
+            "parameterTypes" : {
+
+            },
+            "title" : "Quickly Add an Item"
+          }
+        ],
+        "key" : "Add an item to ${applicationName}",
+        "location" : {
+          "startingColumn" : 0,
+          "startingLine" : 277
+        },
+        "values" : [
+          "Add an item to ${applicationName}",
+          "Quickly add something to ${applicationName}"
+        ]
+      }
+    ],
+    "Localizable" : [
+      {
+        "key" : "Add ${quantity} ${name} to ${locationName}"
+      },
+      {
+        "key" : "Find ${query} in storage"
+      },
+      {
+        "key" : "How many ${query} do I have"
+      },
+      {
+        "key" : "List my ${category} items"
+      },
+      {
+        "key" : "What's in ${location}"
+      }
+    ]
+  },
+  "version" : 2
+}

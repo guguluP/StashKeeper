@@ -267,10 +267,10 @@ private struct ChatBubble: View {
         .padding(.vertical, 10)
         .background {
             if message.role == .user {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.blue)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.accentColor.gradient)
             } else {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(.regularMaterial)
             }
         }

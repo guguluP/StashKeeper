@@ -37,6 +37,18 @@ actor ProductLookupService {
 
     private let session = URLSession(configuration: .ephemeral)
 
+    /// Open Food Facts requires a contactable User-Agent; anonymous
+    /// clients are throttled or blocked.
+    private static func identifiedRequest(url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        request.setValue(
+            "StashKeeper/\(version) (https://github.com/piyushpatnaik/StashKeeper; inventory-barcode-lookup)",
+            forHTTPHeaderField: "User-Agent"
+        )
+        return request
+    }
+
     /// Looks up a product by barcode, trying Open Food Facts first (best
     /// for groceries, produce, dairy — including Indian regional products),
     /// then UPCitemdb for general merchandise, then a local Indian FMCG
@@ -69,7 +81,7 @@ actor ProductLookupService {
             throw ProductLookupError.notFound
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: Self.identifiedRequest(url: url))
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw ProductLookupError.networkUnavailable
         }
@@ -116,7 +128,7 @@ actor ProductLookupService {
             throw ProductLookupError.notFound
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: Self.identifiedRequest(url: url))
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw ProductLookupError.networkUnavailable
         }

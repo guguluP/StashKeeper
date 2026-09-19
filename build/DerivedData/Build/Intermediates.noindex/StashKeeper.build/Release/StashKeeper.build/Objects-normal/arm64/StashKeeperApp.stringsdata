@@ -1,0 +1,24 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/StashKeeperApp.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "StashKeeper",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Item…",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 38
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,168 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/AddItemFlow/AddItemFlowView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add Items",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 141
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save (%lld)",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "This item is no longer available.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 704
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add photos or a video",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 198
+        }
+      },
+      {
+        "comment": "",
+        "key": "Apple Intelligence identifies every item it can find — even multiple products in one photo — and estimates expiry dates for perishables.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 200
+        }
+      },
+      {
+        "comment": "",
+        "key": "Photograph: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "From your receipt scan. Take a photo of the actual item so it can be cataloged with an accurate name, category, and expiry.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "Take a photo now, or select up to 10 photos, or a video panning across your items",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 239
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose Photos or Video",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 229
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recipe ideas for what you just added",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 569
+        }
+      },
+      {
+        "comment": "",
+        "key": "Photo %lld — %lld item%@ found",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 583
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap a box to include/exclude it. Tap the pencil to edit details. Dashed purple boxes were merged as another angle of a nearby photo's item — tap to split them back out.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 599
+        }
+      },
+      {
+        "comment": "",
+        "key": "Apple Intelligence isn't available on this device — names and categories below are rough estimates from barcode/text scanning only. Please double check before saving.",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 605
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 652
+        }
+      },
+      {
+        "comment": "",
+        "key": "Already in your inventory?",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 641
+        }
+      },
+      {
+        "comment": "",
+        "key": "\"%@\" — %@. Currently have %lld in %@.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 643
+        }
+      },
+      {
+        "comment": "",
+        "key": "Update existing (+%lld)",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 659
+        }
+      },
+      {
+        "comment": "",
+        "key": "This is a new, separate item",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 660
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 756
+        }
+      }
+    ]
+  },
+  "version": 1
+}

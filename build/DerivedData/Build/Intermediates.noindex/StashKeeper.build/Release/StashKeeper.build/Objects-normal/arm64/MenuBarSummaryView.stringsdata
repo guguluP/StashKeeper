@@ -1,0 +1,64 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/MenuBarSummaryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Nothing expiring soon",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "StashKeeper",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld items",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expired",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldd",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open StashKeeper",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quit",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 75
+        }
+      }
+    ]
+  },
+  "version": 1
+}

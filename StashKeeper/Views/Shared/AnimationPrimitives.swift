@@ -51,6 +51,71 @@ enum StashHaptics {
     }
 }
 
+// MARK: - Visual language
+
+enum StashTheme {
+    static var heroGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.accentColor.opacity(0.55),
+                Color.purple.opacity(0.35),
+                Color.orange.opacity(0.25)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static var screenBackground: some View {
+        ZStack {
+            Color(white: 0.06).opacity(0.0001)
+            LinearGradient(
+                colors: [
+                    Color.accentColor.opacity(0.08),
+                    Color.clear,
+                    Color.orange.opacity(0.05)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .ignoresSafeArea()
+    }
+}
+
+struct ExpiryBadge: View {
+    let item: StashItem
+
+    var body: some View {
+        if item.isPerishable {
+            Text(item.expiryCaption)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .foregroundStyle(item.expiryStatus.tint)
+                .background(item.expiryStatus.tint.opacity(0.15), in: Capsule())
+        }
+    }
+}
+
+struct StashSectionHeader: View {
+    let title: String
+    var systemImage: String?
+    var tint: Color = .primary
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .foregroundStyle(tint)
+            }
+            Text(title)
+                .font(.headline)
+            Spacer()
+        }
+    }
+}
+
 // MARK: - Liquid Glass surfaces
 
 /// Applies the Tahoe-era Liquid Glass treatment where available (macOS 26 /

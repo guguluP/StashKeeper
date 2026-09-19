@@ -1,0 +1,64 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Graphics/ConfettiRenderer.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Item Name",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item Name",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location Name",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item Name",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quantity",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 189
+        }
+      }
+    ]
+  },
+  "version": 1
+}

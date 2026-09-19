@@ -1,0 +1,240 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Views/ItemDetail/ItemDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Delete this item?",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 242
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Price",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "Barcode",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "Perishability",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tags",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 141
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notes",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 203
+        }
+      },
+      {
+        "comment": "",
+        "key": "Text Found on Item",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 212
+        }
+      },
+      {
+        "comment": "",
+        "key": "Name",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "Subcategory",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quantity: %lld",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "None",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Detected from price tag in photo",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Currency",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 61
+        }
+      },
+      {
+        "comment": "",
+        "key": "Amount",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Matched via %@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "Perishable",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 105
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expiry Date",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI estimate — please confirm",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI-detected from packaging",
+        "location": {
+          "startingColumn": 83,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldd ago",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldd left",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add notes…",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 204
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Item",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 246
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 249
+        }
+      }
+    ]
+  },
+  "version": 1
+}

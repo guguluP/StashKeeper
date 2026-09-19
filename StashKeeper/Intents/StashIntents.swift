@@ -12,8 +12,8 @@ import SwiftData
 
 struct WhatsExpiringIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "What's Expiring Soon"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "What's Expiring Soon"
+    static let description = IntentDescription(
         "Lists items in your stash that are expiring soon or have expired."
     )
 
@@ -44,8 +44,8 @@ struct WhatsExpiringIntent: AppIntent {
 
 struct FindItemIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Find an Item in Storage"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Find an Item in Storage"
+    static let description = IntentDescription(
         "Finds where an item is stored, e.g. 'Where is my passport?'"
     )
 
@@ -81,8 +81,8 @@ struct FindItemIntent: AppIntent {
 
 struct HowManyItemsIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "How Many of an Item"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "How Many of an Item"
+    static let description = IntentDescription(
         "Tells you how many of a given item you have in your stash, e.g. 'How many AA batteries do I have?'"
     )
 
@@ -120,8 +120,8 @@ struct HowManyItemsIntent: AppIntent {
 
 struct ItemsInLocationIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "List Items in a Location"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "List Items in a Location"
+    static let description = IntentDescription(
         "Lists what's stored in a specific place, e.g. 'What's in my fridge?'"
     )
 
@@ -154,8 +154,8 @@ struct ItemsInLocationIntent: AppIntent {
 
 struct ItemsInCategoryIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "List Items by Category"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "List Items by Category"
+    static let description = IntentDescription(
         "Lists items in a category, e.g. 'What electronics do I have stored?'"
     )
 
@@ -188,20 +188,20 @@ struct ItemsInCategoryIntent: AppIntent {
 
 struct TotalInventoryValueIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Total Inventory Value"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Total Inventory Value"
+    static let description = IntentDescription(
         "Totals up the recorded price of everything in your stash, e.g. 'How much is my stuff worth?'"
     )
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<Double> & ProvidesDialog {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         let context = ModelContainerProvider.shared.mainContext
         let descriptor = FetchDescriptor<StashItem>()
         let items = (try? context.fetch(descriptor)) ?? []
 
         let priced = items.filter { $0.priceAmount != nil }
         guard !priced.isEmpty else {
-            return .result(value: 0, dialog: "None of your items have a recorded price yet.")
+            return .result(value: "0", dialog: "None of your items have a recorded price yet.")
         }
 
         // Group by currency rather than assuming everything's the same
@@ -213,16 +213,15 @@ struct TotalInventoryValueIntent: AppIntent {
             return String(format: "%.2f %@", total, currency)
         }.joined(separator: ", plus ")
 
-        let primaryTotal = byCurrency.values.first?.reduce(0.0) { $0 + ($1.priceAmount ?? 0) * Double($1.quantity) } ?? 0
         let dialog = "Your \(priced.count) priced item\(priced.count == 1 ? "" : "s") total \(totalsDescription)."
-        return .result(value: primaryTotal, dialog: IntentDialog(stringLiteral: dialog))
+        return .result(value: totalsDescription, dialog: IntentDialog(stringLiteral: dialog))
     }
 }
 
 struct QuickAddItemIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Quickly Add an Item"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Quickly Add an Item"
+    static let description = IntentDescription(
         "Adds a basic item to your stash by name, e.g. 'Add batteries to StashKeeper'. For photo-based recognition, open the app instead."
     )
 
@@ -341,9 +340,5 @@ struct StashKeeperShortcuts: AppShortcutsProvider {
     }
 }
 
-/// Provides access to the shared SwiftData ModelContainer from App Intents,
-/// which run outside the normal SwiftUI environment.
-enum ModelContainerProvider {
-    static let shared: ModelContainer = SharedModelConfiguration.makeContainer()
-}
+
 

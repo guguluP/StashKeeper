@@ -59,10 +59,6 @@ final class ExpiryEngine {
 
     /// Items due for in-app "expiring soon" / "expired" surfacing, most urgent first.
     func attentionNeeded(items: [StashItem]) -> [StashItem] {
-        items
-            .filter { $0.expiryStatus == .expiringSoon || $0.expiryStatus == .expired }
-            .sorted { lhs, rhs in
-                (lhs.expiryDate ?? .distantFuture) < (rhs.expiryDate ?? .distantFuture)
-            }
+        StashItem.needingAttention(in: items)
     }
 }

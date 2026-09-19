@@ -1,0 +1,252 @@
+{
+  "source": "/Users/purushottampatnaik/Desktop/StashKeeper/StashKeeper/Intents/StashIntents.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "What's Expiring Soon",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 15
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lists items in your stash that are expiring soon or have expired.",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "Nothing is expiring soon. You're all caught up.",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Find an Item in Storage",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Finds where an item is stored, e.g. 'Where is my passport?'",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 49
+        }
+      },
+      {
+        "comment": "",
+        "key": "I couldn't find anything matching \"%@\" in your stash.",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 68
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item Name"
+      },
+      {
+        "comment": "",
+        "key": "How Many of an Item",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tells you how many of a given item you have in your stash, e.g. 'How many AA batteries do I have?'",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "I couldn't find anything matching \"%@\" in your stash.",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 106
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item Name"
+      },
+      {
+        "comment": "",
+        "key": "List Items in a Location",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lists what's stored in a specific place, e.g. 'What's in my fridge?'",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "I don't see any items stored in \"%@\".",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 146
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location Name"
+      },
+      {
+        "comment": "",
+        "key": "List Items by Category",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lists items in a category, e.g. 'What electronics do I have stored?'",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 159
+        }
+      },
+      {
+        "comment": "",
+        "key": "I don't see any items in the \"%@\" category.",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 180
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category"
+      },
+      {
+        "comment": "",
+        "key": "Total Inventory Value",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "Totals up the recorded price of everything in your stash, e.g. 'How much is my stuff worth?'",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "None of your items have a recorded price yet.",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 204
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quickly Add an Item",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 224
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adds a basic item to your stash by name, e.g. 'Add batteries to StashKeeper'. For photo-based recognition, open the app instead.",
+        "location": {
+          "startingColumn": 9,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "Item Name"
+      },
+      {
+        "comment": "",
+        "key": "Quantity"
+      },
+      {
+        "comment": "",
+        "key": "Location"
+      },
+      {
+        "comment": "",
+        "key": "What's Expiring",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 284
+        }
+      },
+      {
+        "comment": "",
+        "key": "Find Item",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 293
+        }
+      },
+      {
+        "comment": "",
+        "key": "How Many",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 302
+        }
+      },
+      {
+        "comment": "",
+        "key": "Items by Location",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 311
+        }
+      },
+      {
+        "comment": "",
+        "key": "Items by Category",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 320
+        }
+      },
+      {
+        "comment": "",
+        "key": "Total Value",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 329
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quick Add",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 338
+        }
+      }
+    ]
+  },
+  "version": 1
+}

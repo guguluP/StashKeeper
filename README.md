@@ -7,10 +7,12 @@ answer questions about your stash through an in-app chat assistant.
 
 ## Status
 
-This is an actively developed Xcode project — it builds and runs on both
-the iOS and macOS targets. Development has mostly happened by exchanging
-zips with Claude and applying fixes based on real Xcode build output, so
-treat this repo as the current working state rather than a finished 1.0.
+This is an actively developed Xcode project — it builds and runs on iOS
+and macOS. The widget extension, App Group store, privacy manifest, and
+Settings backup/export are wired in. Register
+`group.com.piyushpatnaik.StashKeeper` (and HealthKit / time-sensitive
+notifications / Private Cloud Compute on iOS) on team `U65M73K349` in the
+developer portal so launch signing matches the entitlements.
 
 ## Requirements
 

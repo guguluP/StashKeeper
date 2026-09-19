@@ -202,10 +202,11 @@ struct InventoryLookupTool: Tool {
         already have. Use this before finalizing an item analysis to
         notice likely duplicates (e.g. 'they already have 3 of these at
         this location, this might be a restock not a new distinct item'),
-        or during search to verify a candidate match actually exists
-        before reporting it back to the user. Results include quantity,
-        location, perishability, optional barcode, and whether a price
-        is recorded — use those fields when judging restocks vs new items.
+        or during search/chat to verify a candidate match actually exists.
+        Results include quantity, location, perishability, daysUntilExpiry,
+        optional barcode, and price. When the user asks what to cook or
+        what needs attention, ALWAYS surface items with the soonest
+        (or already-passed) expiry first.
         """
 
     /// Sendable snapshot of items to search against, captured at
