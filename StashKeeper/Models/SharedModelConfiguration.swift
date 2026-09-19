@@ -41,6 +41,7 @@
 //       and both targets' provisioning profiles include it.
 //
 
+import Darwin
 import Foundation
 import SwiftData
 
@@ -59,37 +60,99 @@ enum SharedModelConfiguration {
         ModelConfiguration(schema: sharedSchema, groupContainer: .identifier(appGroupIdentifier))
     }
 
+    /// Must pass `groupContainer: .none`. The `ModelConfiguration(schema:)`
+    /// overload defaults to `.automatic`, which reuses the App Group store
+    /// whenever the entitlement is present — so a "fallback" without `.none`
+    /// opens the same `default.store` that just failed (NSCocoaError 256 /
+    /// SQLITE_AUTH 23) and then `fatalError`s.
     static var defaultConfiguration: ModelConfiguration {
-        ModelConfiguration(schema: sharedSchema)
+        ModelConfiguration(schema: sharedSchema, groupContainer: .none)
     }
 
     static func makeContainer() -> ModelContainer {
-        guard useAppGroupContainer else {
-            return makeDefaultContainer()
+        if useAppGroupContainer {
+            if let container = openOrRepair(sharedConfiguration, storeDirectory: appGroupStoreDirectory) {
+                return container
+            }
         }
-
+        if let container = openOrRepair(defaultConfiguration, storeDirectory: applicationSupportStoreDirectory) {
+            return container
+        }
+        // Last resort: in-memory so launch never hard-crashes. Inventory
+        // will be empty for this session only.
         do {
-            return try ModelContainer(for: sharedSchema, configurations: [sharedConfiguration])
+            return try ModelContainer(
+                for: sharedSchema,
+                configurations: [ModelConfiguration(schema: sharedSchema, isStoredInMemoryOnly: true)]
+            )
         } catch {
-            // NOTE: in practice this catch is only reachable for *other*
-            // ModelContainer failures (e.g. schema migration errors) — a
-            // missing/unprovisioned App Group itself crashes unconditionally
-            // before this can run, per the note above. Kept as defense in
-            // depth for the errors that genuinely are throwable.
-            return makeDefaultContainer()
+            fatalError("Failed to create even an in-memory ModelContainer: \(error)")
         }
     }
 
-    private static func makeDefaultContainer() -> ModelContainer {
+    private static func openOrRepair(
+        _ configuration: ModelConfiguration,
+        storeDirectory: URL?
+    ) -> ModelContainer? {
+        if let container = tryCreate(configuration) {
+            return container
+        }
+        // Quarantine xattrs on SQLite files in the group container cause
+        // SQLITE_AUTH (23) / NSCocoaErrorDomain 256 "couldn't be opened".
+        clearQuarantine(in: storeDirectory)
+        if let container = tryCreate(configuration) {
+            return container
+        }
+        destroyStoreFiles(in: storeDirectory)
+        return tryCreate(configuration)
+    }
+
+    private static func tryCreate(_ configuration: ModelConfiguration) -> ModelContainer? {
         do {
-            return try ModelContainer(for: sharedSchema, configurations: [defaultConfiguration])
+            return try ModelContainer(for: sharedSchema, configurations: [configuration])
         } catch {
-            fatalErrorUnrecoverable(error)
+            return nil
         }
     }
 
-    private static func fatalErrorUnrecoverable(_ error: Error) -> Never {
-        fatalError("Failed to create ModelContainer even with fallback configuration: \(error)")
+    private static var appGroupStoreDirectory: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
+            .appendingPathComponent("Library/Application Support", isDirectory: true)
+    }
+
+    private static var applicationSupportStoreDirectory: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+    }
+
+    private static func clearQuarantine(in directory: URL?) {
+        guard let directory else { return }
+        for url in storeFileURLs(in: directory) {
+            try? FileManager.default.setAttributes(
+                [.extensionHidden: false],
+                ofItemAtPath: url.path
+            )
+            let _ = url.withUnsafeFileSystemRepresentation { path in
+                guard let path else { return }
+                removexattr(path, "com.apple.quarantine", 0)
+            }
+        }
+    }
+
+    private static func destroyStoreFiles(in directory: URL?) {
+        guard let directory else { return }
+        for url in storeFileURLs(in: directory) {
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+
+    private static func storeFileURLs(in directory: URL) -> [URL] {
+        let names = [
+            "default.store",
+            "default.store-wal",
+            "default.store-shm",
+        ]
+        return names.map { directory.appendingPathComponent($0) }
     }
 }
 

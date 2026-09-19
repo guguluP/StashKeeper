@@ -97,9 +97,6 @@ final class ReceiptScanService {
         }
 
         let linesText = orderedLines.map(\.text).joined(separator: "\n")
-        let receiptPhoto = AFMImageSupport.modelSupportsVision(model)
-            ? AFMImageSupport.attachment(from: imageData)
-            : nil
 
         let prompt = Prompt {
             """
@@ -108,10 +105,6 @@ final class ReceiptScanService {
             OCR text (top-to-bottom):
             \(linesText)
             """
-            if let receiptPhoto {
-                "Receipt photo (use to correct OCR mistakes and recover missed lines):"
-                receiptPhoto
-            }
         }
 
         let options = GenerationOptions(

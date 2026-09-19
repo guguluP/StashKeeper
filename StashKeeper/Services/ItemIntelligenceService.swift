@@ -2,10 +2,8 @@
 //  ItemIntelligenceService.swift
 //  StashKeeper
 //
-//  Wraps Foundation Models v3 (iOS 27): on-device AFM with vision,
-//  Dynamic Profiles, OCRTool/BarcodeReaderTool, and Private Cloud Compute
-//  when provisioned and under quota. Heuristic fallback if no model is
-//  available. This service is the "best use of AFM" layer:
+//  Wraps the Foundation Models framework (on-device Apple Intelligence
+//  plus optional Private Cloud Compute). This service is the AFM layer:
 //
 //  - A warm, persistent LanguageModelSession per task type instead of a
 //    fresh session per call, so repeated instructions aren't re-parsed
@@ -22,11 +20,8 @@
 //    attempt fails, before falling back to manual entry.
 //
 
-import CoreGraphics
 import Foundation
 import FoundationModels
-import ImageIO
-import Vision
 
 enum ItemIntelligenceError: Error, LocalizedError {
     case modelUnavailable(SystemLanguageModel.Availability.UnavailableReason)
@@ -214,101 +209,8 @@ enum AFMUseCase: Sendable, Equatable {
     }
 }
 
-/// Shared helpers for feeding photos into Foundation Models' multimodal
-/// path (`Attachment` / vision capability). Downscales crops so a multi-item
-/// batch does not blow the on-device context window.
-enum AFMImageSupport {
-    /// Max long-edge for region crops attached to a prompt. Large enough for
-    /// packaging text and produce color, small enough for several crops.
-    static let maxRegionDimension: CGFloat = 512
-    /// Full-frame attachments (receipts) can be a bit larger.
-    static let maxFullFrameDimension: CGFloat = 768
-
-    static func loadCGImage(from data: Data) -> (image: CGImage, orientation: CGImagePropertyOrientation)? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
-            return nil
-        }
-        var orientation = CGImagePropertyOrientation.up
-        if let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-           let raw = props[kCGImagePropertyOrientation] as? UInt32,
-           let parsed = CGImagePropertyOrientation(rawValue: raw) {
-            orientation = parsed
-        }
-        return (cgImage, orientation)
-    }
-
-    /// Vision-space normalized rect (origin bottom-left) → pixel crop.
-    static func crop(
-        _ cgImage: CGImage,
-        normalizedRect: CGRect,
-        marginFraction: CGFloat = 0.06
-    ) -> CGImage? {
-        let width = CGFloat(cgImage.width)
-        let height = CGFloat(cgImage.height)
-        var rect = CGRect(
-            x: normalizedRect.origin.x * width,
-            y: (1 - normalizedRect.origin.y - normalizedRect.height) * height,
-            width: normalizedRect.width * width,
-            height: normalizedRect.height * height
-        )
-        let marginX = rect.width * marginFraction
-        let marginY = rect.height * marginFraction
-        rect = rect.insetBy(dx: -marginX, dy: -marginY)
-        rect = rect.intersection(CGRect(x: 0, y: 0, width: width, height: height))
-        guard rect.width > 1, rect.height > 1 else { return cgImage }
-        return cgImage.cropping(to: rect)
-    }
-
-    static func downscale(_ image: CGImage, maxDimension: CGFloat) -> CGImage {
-        let w = CGFloat(image.width)
-        let h = CGFloat(image.height)
-        let longest = max(w, h)
-        guard longest > maxDimension else { return image }
-        let scale = maxDimension / longest
-        let targetW = max(1, Int((w * scale).rounded()))
-        let targetH = max(1, Int((h * scale).rounded()))
-        guard let context = CGContext(
-            data: nil,
-            width: targetW,
-            height: targetH,
-            bitsPerComponent: image.bitsPerComponent,
-            bytesPerRow: 0,
-            space: image.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: image.bitmapInfo.rawValue
-        ) else {
-            return image
-        }
-        context.interpolationQuality = .high
-        context.draw(image, in: CGRect(x: 0, y: 0, width: targetW, height: targetH))
-        return context.makeImage() ?? image
-    }
-
-    static func attachment(
-        from data: Data,
-        maxDimension: CGFloat = maxFullFrameDimension
-    ) -> Attachment<ImageAttachmentContent>? {
-        guard let loaded = loadCGImage(from: data) else { return nil }
-        let scaled = downscale(loaded.image, maxDimension: maxDimension)
-        return Attachment(scaled, orientation: loaded.orientation)
-    }
-
-    static func regionAttachment(
-        fullImageData: Data,
-        normalizedRect: CGRect
-    ) -> Attachment<ImageAttachmentContent>? {
-        guard let loaded = loadCGImage(from: fullImageData),
-              let cropped = crop(loaded.image, normalizedRect: normalizedRect) else {
-            return nil
-        }
-        let scaled = downscale(cropped, maxDimension: maxRegionDimension)
-        return Attachment(scaled, orientation: loaded.orientation)
-    }
-
-    static func modelSupportsVision(_ model: some LanguageModel) -> Bool {
-        model.capabilities.contains(.vision)
-    }
-}
+// Image `Attachment` is not linked: this Mac's FoundationModels dylib
+// does not export the SDK's CGImage+orientation initializer (dyld SIGABRT).
 
 /// Routes each request to the on-device model first (free, private,
 /// offline, no per-request limit) and only escalates to
@@ -347,18 +249,10 @@ enum PreferredModelRouter {
         return false
     }()
 
-    /// Safe PCC availability: never constructs the type without entitlement,
-    /// and skip it when the daily Private Cloud Compute quota is exhausted.
+    /// Safe PCC availability: never constructs the type without entitlement.
     static var isPrivateCloudComputeAvailable: Bool {
         guard isProvisionedForPrivateCloudCompute else { return false }
-        let pcc = PrivateCloudComputeLanguageModel()
-        guard pcc.isAvailable else { return false }
-        return !pcc.quotaUsage.isLimitReached
-    }
-
-    static func privateCloudModelIfAvailable() -> PrivateCloudComputeLanguageModel? {
-        guard isPrivateCloudComputeAvailable else { return nil }
-        return PrivateCloudComputeLanguageModel()
+        return PrivateCloudComputeLanguageModel().isAvailable
     }
 
     /// On-device model for a specialized use case.
@@ -472,7 +366,7 @@ final class ItemIntelligenceService {
         // Large batches benefit from PCC's bigger context / reasoning.
         let preferCloud = regions.count > 6
             || (sourceImageData != nil && regions.count > 3)
-        let (session, model) = makeAnalysisSession(
+        let (session, _) = makeAnalysisSession(
             existingItems: existingItems,
             preferCloud: preferCloud
         )
@@ -487,32 +381,12 @@ final class ItemIntelligenceService {
             "\nThe user is confirming an item from a shopping receipt that read: \($0). Prefer what you actually see/read in the photo below over this hint — only use it to fill in gaps or resolve ambiguity, e.g. if the photo alone doesn't make the product name or price fully clear.\n"
         } ?? ""
 
-        let useVision = sourceImageData != nil && AFMImageSupport.modelSupportsVision(model)
-        // Prefer per-region crops (model sees each item). For a single-item
-        // photo, attach the full frame once instead of a redundant crop.
-        let regionAttachments: [Attachment<ImageAttachmentContent>] = {
-            guard useVision, let sourceImageData else { return [] }
-            if regions.count == 1 {
-                if let full = AFMImageSupport.attachment(from: sourceImageData) {
-                    return [full]
-                }
-                return []
-            }
-            return regions.prefix(8).compactMap { region in
-                AFMImageSupport.regionAttachment(
-                    fullImageData: sourceImageData,
-                    normalizedRect: region.normalizedBoundingBox
-                )
-            }
-        }()
-
         let prompt = Self.buildAnalysisPrompt(
             regionCount: regions.count,
             hintLine: hintLine,
             regionsDescription: regionsDescription,
             globalRecognizedText: globalRecognizedText,
-            locationHint: locationHint,
-            regionAttachments: regionAttachments
+            locationHint: locationHint
         )
 
         // Structured extraction: greedy sampling + low temperature for
@@ -538,9 +412,7 @@ final class ItemIntelligenceService {
                 finalized,
                 regions: regions,
                 session: session,
-                existingLocationNames: existingLocationNames,
-                sourceImageData: sourceImageData,
-                modelSupportsVision: useVision
+                existingLocationNames: existingLocationNames
             )
         } catch {
             // Retry once, escalating tier + narrower prompt.
@@ -554,7 +426,6 @@ final class ItemIntelligenceService {
                 regionsDescription: regionsDescription,
                 globalRecognizedText: globalRecognizedText,
                 locationHint: locationHint,
-                regionAttachments: regionAttachments,
                 compact: true
             )
             do {
@@ -591,20 +462,8 @@ final class ItemIntelligenceService {
         regionsDescription: String,
         globalRecognizedText: [OCRLine],
         locationHint: String,
-        regionAttachments: [Attachment<ImageAttachmentContent>],
         compact: Bool = false
     ) -> Prompt {
-        let visionPreamble: String = regionAttachments.isEmpty
-            ? ""
-            : """
-
-            Region photos are attached below in order (labeled region-N) —
-            treat them as primary evidence. You may call OCRTool and
-            BarcodeReaderTool on those labeled attachments to re-read
-            packaging text or barcodes yourself. Pre-extracted OCR and
-            classification labels are supporting signals.
-            """
-
         if compact {
             return Prompt {
                 """
@@ -613,12 +472,7 @@ final class ItemIntelligenceService {
                 Return one analysis entry per region, in order.
                 Prefer exact category names from the allowed list. Leave price
                 empty when unsure. Do not invent brand names without OCR/barcode evidence.
-                \(visionPreamble)
                 """
-                for (index, attachment) in regionAttachments.enumerated() {
-                    "Region \(index + 1) photo:"
-                    attachment.label("region-\(index + 1)")
-                }
             }
         }
 
@@ -630,13 +484,6 @@ final class ItemIntelligenceService {
             you want to check whether the user likely already has a similar
             item, to help decide on quantity or flag a probable restock.
             \(hintLine)
-            \(visionPreamble)
-            """
-            for (index, attachment) in regionAttachments.enumerated() {
-                "Photo for Region \(index + 1):"
-                attachment.label("region-\(index + 1)")
-            }
-            """
             \(regionsDescription)
 
             Additional text found elsewhere in the full image (may be
@@ -677,9 +524,7 @@ final class ItemIntelligenceService {
         _ analyses: [ItemAnalysis],
         regions: [RegionAnalysisInput],
         session: LanguageModelSession,
-        existingLocationNames: [String],
-        sourceImageData: Data?,
-        modelSupportsVision: Bool
+        existingLocationNames: [String]
     ) async -> [ItemAnalysis] {
         guard analyses.count == regions.count else { return analyses }
 
@@ -692,13 +537,6 @@ final class ItemIntelligenceService {
         var results = analyses
         for index in candidateIndices {
             let region = regions[index]
-            let crop: Attachment<ImageAttachmentContent>? = {
-                guard modelSupportsVision, let sourceImageData else { return nil }
-                return AFMImageSupport.regionAttachment(
-                    fullImageData: sourceImageData,
-                    normalizedRect: region.normalizedBoundingBox
-                )
-            }()
             let focusedPrompt = Prompt {
                 """
                 Look again at just this one item, in isolation, more
@@ -719,10 +557,6 @@ final class ItemIntelligenceService {
 
                 Return exactly one analysis entry for this single item.
                 """
-                if let crop {
-                    "Region photo:"
-                    crop.label("region-focus")
-                }
             }
             do {
                 let response = try await session.respond(
@@ -1039,10 +873,7 @@ final class ItemIntelligenceService {
             analysis results and (when provided) actual photos of each
             region. You are precise, concise, and never invent specific
             facts that aren't supported by the given labels, text, or
-            visible photo evidence. When a photo is attached, you may
-            call OCRTool and BarcodeReaderTool on the labeled attachment
-            to extract printed text or barcodes yourself if the provided
-            OCR looks incomplete or garbled. When uncertain about an expiry date or
+            visible photo evidence. When uncertain about an expiry date or
             category, prefer a lower confidence score rather than a
             confident wrong guess.
 
@@ -1196,15 +1027,10 @@ final class ItemIntelligenceService {
             Today's date is \(Self.todayISO()).
             """
 
-        var tools: [any Tool] = [InventoryLookupTool(items: existingItems)]
-        tools.append(contentsOf: StashVisionTools.analysisTools())
-
         let session = LanguageModelSession(
-            profile: StashAnalysisProfile(
-                tools: tools,
-                instructionsText: instructionsText,
-                preferCloud: preferCloud
-            )
+            model: model,
+            tools: [InventoryLookupTool(items: existingItems)],
+            instructions: Instructions { instructionsText }
         )
         // Prewarm loads the model + instructions before the first respond,
         // which is the main latency win now that sessions aren't reused
@@ -1325,10 +1151,9 @@ final class ItemIntelligenceService {
             """
 
         let session = LanguageModelSession(
-            profile: StashSearchProfile(
-                tools: [InventoryLookupTool(items: existingItems)],
-                instructionsText: instructionsText
-            )
+            model: model,
+            tools: [InventoryLookupTool(items: existingItems)],
+            instructions: Instructions { instructionsText }
         )
         session.prewarm()
         searchSession = session
