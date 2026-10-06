@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Build products
+build/
+DerivedData/
+*.hmap
+*.o
+*.pcm
+*.dSYM
+*.dSYM.zip
+
+# Nested repo export that was committed by mistake
+StashKeeper_repo.bundle

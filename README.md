@@ -85,12 +85,19 @@ HealthKit models consumption, not pantry stock.
 - Widget Extension (`StashKeeperWidgets/`) shares the same SwiftData store
   via App Group for a live expiring-items timeline.
 - Live Activities for scan-in-progress status.
-- 7 App Intents/Siri shortcuts.
+- 12 App Intents: What's Expiring, Find Item, How Many, Items in a
+  Location, Items by Category, Total Inventory Value, Quick Add, Open
+  Item, Add Item, Show Expiring Items, Use One, and Remind Tomorrow.
+- Settings shows on-device barcode lookup hit and miss stats.
+- The assistant keeps its chat transcript on device across launches.
+- English string catalog at `StashKeeper/Localizable.xcstrings`, with
+  VoiceOver labels on icon-only controls.
 
 ## Project structure
 
 ```
 StashKeeper/
+├── .github/workflows/ios.yml    Simulator build and StashKeeperTests
 ├── StashKeeper.xcodeproj/       Xcode project (Xcode 16+ file-system
 │                                synchronized groups — new files in the
 │                                folders below are picked up automatically,
@@ -108,6 +115,7 @@ StashKeeper/
 │   │   └── Shared/              Reusable components, animation primitives
 │   ├── Intents/                 App Intents / Siri shortcuts
 │   ├── LiveActivity/            Scan-progress Live Activity
+│   ├── Localizable.xcstrings    English string catalog
 │   ├── Assets.xcassets/         App icon, accent color
 │   └── AppIcon/                 Source layers for Icon Composer
 └── StashKeeperWidgets/          Widget Extension target

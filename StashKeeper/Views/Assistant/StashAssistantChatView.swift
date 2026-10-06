@@ -3,11 +3,9 @@
 //  StashKeeper
 //
 //  Full-screen chat surface for the in-app assistant. Reachable from the
-//  Dashboard prompt chip (AssistantPromptChip, below) or directly. Keeps
-//  its own local message list in @State rather than persisting to
-//  SwiftData — this is a lightweight, session-scoped conversation, not
-//  inventory data, and StashAssistantService itself already holds the
-//  actual model session/context across turns.
+//  Dashboard prompt chip or directly. The transcript is saved on device
+//  through StashChatHistoryStore. StashAssistantService still owns the
+//  model session across turns.
 //
 
 import SwiftUI
@@ -75,13 +73,24 @@ struct StashAssistantChatView: View {
                             withAnimation(.stashSpring) {
                                 messages.removeAll()
                             }
+                            StashChatHistoryStore.clear()
                             StashAssistantService.shared.resetConversation()
                         } label: {
                             Image(systemName: "square.and.pencil")
                         }
+                        .accessibilityLabel("New conversation")
                     }
                 }
             }
+        }
+        .task {
+            if messages.isEmpty {
+                messages = StashChatHistoryStore.load()
+            }
+        }
+        .onChange(of: messages) { _, updated in
+            guard !updated.contains(where: \.isStreaming) else { return }
+            StashChatHistoryStore.save(updated)
         }
     }
 
@@ -94,6 +103,7 @@ struct StashAssistantChatView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(.blue)
                 .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.4))
+                .accessibilityHidden(true)
             VStack(spacing: 6) {
                 Text("Ask about your stash")
                     .font(.title3.weight(.semibold))
@@ -175,6 +185,7 @@ struct StashAssistantChatView: View {
                 .focused($isInputFocused)
                 .disabled(isSending)
                 .onSubmit { sendDraft() }
+                .accessibilityLabel("Message")
 
             Button {
                 sendDraft()
@@ -185,6 +196,7 @@ struct StashAssistantChatView: View {
             }
             .buttonStyle(.pressScale)
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
+            .accessibilityLabel(isSending ? "Sending" : "Send message")
         }
         .padding()
     }
@@ -265,6 +277,8 @@ private struct ChatBubble: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(message.role == .user ? "You said \(message.text)" : "Assistant said \(message.isStreaming ? "Thinking" : message.text)")
         .background {
             if message.role == .user {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)

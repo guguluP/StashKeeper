@@ -54,4 +54,14 @@ struct ExpiryLogicTests {
         #expect(imported.first?.name == "Milk")
         #expect(imported.first?.location?.name == "Fridge")
     }
+
+    @Test func chatHistoryDropsStreamingPlaceholders() throws {
+        let streaming = StashChatMessage(role: .assistant, text: "", isStreaming: true)
+        let kept = StashChatMessage(role: .user, text: "What's expiring?", isStreaming: false)
+        let data = try JSONEncoder().encode([streaming, kept])
+        let decoded = try JSONDecoder().decode([StashChatMessage].self, from: data)
+        let durable = decoded.filter { !$0.isStreaming && !$0.text.isEmpty }
+        #expect(durable.map(\.text) == ["What's expiring?"])
+        #expect(durable.first?.role == .user)
+    }
 }

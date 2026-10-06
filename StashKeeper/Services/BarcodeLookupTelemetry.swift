@@ -9,6 +9,7 @@
 //  reads it fine, but no database recognizes the product)? Without this,
 //  that's guesswork; with it, ItemDetailView (or a future debug screen)
 //  can surface the real miss rate and which barcodes are missing.
+//  Settings → Barcode lookup reads this log.
 //
 //  Nothing here ever leaves the device — this is UserDefaults-backed, not
 //  analytics. It's a bounded ring buffer (most recent N entries) so it

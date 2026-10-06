@@ -155,6 +155,7 @@ struct DashboardView: View {
         }
         .buttonStyle(.pressScale)
         .glassSurface(cornerRadius: 18, interactive: true)
+        .accessibilityLabel(title)
     }
 
     private var emptyInventory: some View {

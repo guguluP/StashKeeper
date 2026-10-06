@@ -45,6 +45,7 @@ struct LocationsListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add location")
             }
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {

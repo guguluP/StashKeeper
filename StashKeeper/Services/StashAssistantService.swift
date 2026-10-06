@@ -22,22 +22,58 @@ import FoundationModels
 import SwiftData
 
 /// One message in the assistant conversation, kept as a plain Sendable
-/// struct (not the framework's internal transcript type) so it's simple to
-/// store in SwiftUI @State and persist later if we ever want chat history
-/// to survive app relaunches.
-struct StashChatMessage: Identifiable, Equatable, Sendable {
-    enum Role: Equatable, Sendable {
+/// struct (not the framework's internal transcript type) so the chat view
+/// can store it and `StashChatHistoryStore` can write it across launches.
+nonisolated struct StashChatMessage: Identifiable, Equatable, Sendable, Codable {
+    enum Role: String, Codable, Equatable, Sendable {
         case user
         case assistant
     }
 
-    let id = UUID()
+    var id: UUID
     let role: Role
     var text: String
     /// True while a response is still streaming in — lets the UI show a
     /// typing-style indicator on the message bubble itself rather than a
     /// separate loading row that then gets swapped out.
-    var isStreaming: Bool = false
+    var isStreaming: Bool
+
+    init(id: UUID = UUID(), role: Role, text: String, isStreaming: Bool = false) {
+        self.id = id
+        self.role = role
+        self.text = text
+        self.isStreaming = isStreaming
+    }
+}
+
+/// On-device chat transcript. Streaming placeholders are dropped so a
+/// relaunch never restores a "Thinking…" bubble.
+nonisolated enum StashChatHistoryStore {
+    private static let key = "StashKeeper.chatHistory"
+
+    static func load() -> [StashChatMessage] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let decoded = try? JSONDecoder().decode([StashChatMessage].self, from: data) else {
+            return []
+        }
+        return decoded.filter { !$0.isStreaming && !$0.text.isEmpty }
+    }
+
+    static func save(_ messages: [StashChatMessage]) {
+        let durable = messages
+            .filter { !$0.isStreaming && !$0.text.isEmpty }
+            .map { message -> StashChatMessage in
+                var copy = message
+                copy.isStreaming = false
+                return copy
+            }
+        guard let data = try? JSONEncoder().encode(durable) else { return }
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    static func clear() {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
 }
 
 enum StashAssistantError: Error, LocalizedError {

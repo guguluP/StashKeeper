@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var showingImporter = false
     @State private var statusMessage: String?
     @State private var notificationStatus: String = "Unknown"
+    @State private var lookupEntries: [BarcodeLookupEntry] = []
 
     var body: some View {
         Form {
@@ -45,6 +46,8 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            barcodeLookupSection
 
             Section("Backup") {
                 Button("Export inventory as JSON") {
@@ -74,7 +77,10 @@ struct SettingsView: View {
         .onChange(of: warningWindowDays) { _, newValue in
             StashSettings.warningWindowDays = newValue
         }
-        .task { await refreshNotificationStatus() }
+        .task {
+            await refreshNotificationStatus()
+            await reloadLookupStats()
+        }
         .fileExporter(
             isPresented: $showingExporter,
             document: exportDocument,
@@ -107,6 +113,65 @@ struct SettingsView: View {
                 statusMessage = error.localizedDescription
             }
         }
+    }
+
+    @ViewBuilder
+    private var barcodeLookupSection: some View {
+        let misses = lookupEntries.filter { $0.outcome == .miss }
+        let hits = lookupEntries.count - misses.count
+        Section("Barcode lookup") {
+            if lookupEntries.isEmpty {
+                Text("No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                LabeledContent("Recorded lookups", value: "\(lookupEntries.count)")
+                LabeledContent("Hits", value: "\(hits)")
+                LabeledContent("Misses", value: "\(misses.count)")
+                LabeledContent("Miss rate", value: missRateLabel(misses: misses.count, total: lookupEntries.count))
+                let missedBarcodes = uniqueMissedBarcodes(from: misses)
+                if !missedBarcodes.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Barcodes with no match")
+                            .font(.subheadline)
+                        ForEach(missedBarcodes.prefix(8), id: \.barcode) { row in
+                            Text("\(row.barcode) · \(row.count)")
+                                .font(.caption.monospaced())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Barcodes with no match: \(missedBarcodes.prefix(8).map(\.barcode).joined(separator: ", "))")
+                }
+            }
+            Button("Clear lookup history", role: .destructive) {
+                Task {
+                    await BarcodeLookupTelemetry.shared.clear()
+                    await reloadLookupStats()
+                }
+            }
+            .disabled(lookupEntries.isEmpty)
+        }
+    }
+
+    private func missRateLabel(misses: Int, total: Int) -> String {
+        guard total > 0 else { return "0%" }
+        let percent = Int((Double(misses) / Double(total) * 100).rounded())
+        return "\(percent)%"
+    }
+
+    private func uniqueMissedBarcodes(from misses: [BarcodeLookupEntry]) -> [(barcode: String, count: Int)] {
+        var counts: [String: Int] = [:]
+        for entry in misses {
+            counts[entry.barcode, default: 0] += 1
+        }
+        return counts
+            .map { (barcode: $0.key, count: $0.value) }
+            .sorted { $0.count > $1.count }
+    }
+
+    private func reloadLookupStats() async {
+        lookupEntries = await BarcodeLookupTelemetry.shared.allEntries()
     }
 
     private func refreshNotificationStatus() async {

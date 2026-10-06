@@ -230,9 +230,11 @@ struct ReceiptScanView: View {
                 Spacer()
                 Image(systemName: "camera")
                     .foregroundStyle(.blue)
+                    .accessibilityHidden(true)
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(isConfirmed ? "\(item.name), already cataloged" : "Catalog \(item.name)")
     }
 
     private var activeItemBinding: Binding<AddItemFlowView.ReceiptItemPrefill?> {

@@ -119,6 +119,7 @@ struct DetectionOverlayView: View {
                     // parent box's onTapGesture (include/exclude toggle),
                     // since both live in the same hit-testing region.
                     .contentShape(Circle())
+                    .accessibilityLabel("Edit \(candidate.analysis.name)")
                     .offset(x: 8, y: -8)
                 }
             }

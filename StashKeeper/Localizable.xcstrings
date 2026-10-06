@@ -1,0 +1,81 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Add Item" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Item" } }
+      }
+    },
+    "Add location" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add location" } }
+      }
+    },
+    "Ask" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask" } } } },
+    "Ask something…" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask something…" } } }
+    },
+    "Barcode lookup" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Barcode lookup" } } }
+    },
+    "Barcodes with no match" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Barcodes with no match" } } }
+    },
+    "Catalog %@" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Catalog %@" } } }
+    },
+    "Clear lookup history" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear lookup history" } } }
+    },
+    "Clear search" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear search" } } }
+    },
+    "Close" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } } } },
+    "Close camera" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close camera" } } }
+    },
+    "Cook" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cook" } } } },
+    "Edit %@" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit %@" } } }
+    },
+    "Filter and sort" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter and sort" } } }
+    },
+    "Hits" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hits" } } } },
+    "Message" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Message" } } } },
+    "Miss rate" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Miss rate" } } } },
+    "Misses" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Misses" } } } },
+    "New conversation" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "New conversation" } } }
+    },
+    "No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases."
+          }
+        }
+      }
+    },
+    "Receipt" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Receipt" } } } },
+    "Recorded lookups" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recorded lookups" } } }
+    },
+    "Send message" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Send message" } } }
+    },
+    "Sending" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sending" } } } },
+    "Settings" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } } } },
+    "Stash Assistant" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Stash Assistant" } } }
+    },
+    "Take photo" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Take photo" } } }
+    },
+    "Use captured photos" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use captured photos" } } }
+    }
+  },
+  "version" : "1.0"
+}

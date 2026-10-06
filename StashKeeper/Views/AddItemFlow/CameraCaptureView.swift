@@ -70,6 +70,7 @@ struct CameraCaptureView: View {
                     .background(.black.opacity(0.4), in: Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close camera")
             Spacer()
             if !model.capturedThumbnails.isEmpty {
                 Text("\(model.capturedThumbnails.count) captured")
@@ -117,6 +118,7 @@ struct CameraCaptureView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Take photo")
             .scaleEffect(model.isCapturing ? 0.85 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.5), value: model.isCapturing)
             .disabled(!model.isAuthorized)
@@ -132,6 +134,7 @@ struct CameraCaptureView: View {
                 .foregroundStyle(model.capturedThumbnails.isEmpty ? .white.opacity(0.35) : .green)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Use captured photos")
             .disabled(model.capturedThumbnails.isEmpty)
             .frame(width: 64, height: 64)
         }
