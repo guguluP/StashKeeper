@@ -17,6 +17,7 @@ struct MilestonesView: View {
     @Query private var allItems: [StashItem]
     @Query private var streakRecords: [StreakRecord]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.displayMetrics) private var metrics
 
     @State private var celebratingMilestones: [CategoryMilestone] = []
     @State private var showCelebration = false
@@ -34,7 +35,7 @@ struct MilestonesView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 28) {
+            LazyVStack(alignment: .leading, spacing: metrics.sectionSpacing) {
                 streakSection
 
                 ForEach(milestonesByCategory, id: \.category) { entry in
@@ -57,7 +58,9 @@ struct MilestonesView: View {
                     .padding(.top, 40)
                 }
             }
-            .padding()
+            .padding(.horizontal, metrics.horizontalPadding)
+            .padding(.vertical, 12)
+            .adaptivePage()
         }
         .navigationTitle("Milestones")
         .onAppear {

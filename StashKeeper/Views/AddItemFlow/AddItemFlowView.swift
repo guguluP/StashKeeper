@@ -61,6 +61,7 @@ struct AddItemFlowView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.displayMetrics) private var metrics
     @Query(sort: \StorageLocation.name) private var locations: [StorageLocation]
     @Query private var existingItems: [StashItem]
 
@@ -200,7 +201,7 @@ struct AddItemFlowView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, metrics.horizontalPadding)
             } else {
                 Text("Add photos or a video")
                     .font(.title2.weight(.semibold))
@@ -208,7 +209,7 @@ struct AddItemFlowView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, metrics.horizontalPadding)
             }
 
             Spacer()
@@ -245,8 +246,9 @@ struct AddItemFlowView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, metrics.horizontalPadding)
             .padding(.bottom, 24)
+            .frame(maxWidth: metrics.readableWidth)
         }
         .onChange(of: photoPickerItems) { _, newValue in
             guard !newValue.isEmpty else { return }

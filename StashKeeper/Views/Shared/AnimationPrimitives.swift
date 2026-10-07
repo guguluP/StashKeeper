@@ -127,12 +127,16 @@ struct GlassSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        if #available(macOS 26.0, iOS 26.0, *) {
+        // OS 27 HIG: Liquid Glass is the control layer (tabs, buttons).
+        // Content cards stay on a standard material so text keeps contrast
+        // when the system glass slider goes clearer.
+        if interactive, #available(macOS 26.0, iOS 26.0, *) {
             content
-                .glassEffect(interactive ? .regular.interactive() : .regular, in: shape)
+                .glassEffect(.regular.interactive(), in: shape)
         } else {
             content
                 .background(.regularMaterial, in: shape)
+                .overlay(shape.strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
         }
     }
 }
@@ -184,6 +188,10 @@ struct PressScaleButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? scale : 1.0)
             .opacity(configuration.isPressed ? 0.85 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+            #if os(macOS)
+            .pointerStyle(.link)
+            .focusable()
+            #endif
             .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed, haptic { StashHaptics.impact() }
             }

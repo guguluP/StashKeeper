@@ -23,6 +23,7 @@ struct StashAssistantChatView: View {
     @State private var errorMessage: String?
     @State private var showingHeuristicNotice = false
     @FocusState private var isInputFocused: Bool
+    @Environment(\.displayMetrics) private var metrics
 
     /// Suggested starter prompts shown when the conversation is empty —
     /// gives the user a concrete sense of what this can do rather than a
@@ -111,7 +112,7 @@ struct StashAssistantChatView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, metrics.horizontalPadding)
             }
 
             VStack(spacing: 10) {
@@ -128,7 +129,8 @@ struct StashAssistantChatView: View {
                     .glassSurface(cornerRadius: 12)
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, metrics.horizontalPadding)
+            .frame(maxWidth: metrics.readableWidth)
 
             Spacer()
             Spacer()
@@ -198,7 +200,10 @@ struct StashAssistantChatView: View {
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
             .accessibilityLabel(isSending ? "Sending" : "Send message")
         }
-        .padding()
+        .padding(.horizontal, metrics.horizontalPadding)
+        .padding(.vertical, 12)
+        .frame(maxWidth: metrics.readableWidth)
+        .frame(maxWidth: .infinity)
     }
 
     private func sendDraft() {

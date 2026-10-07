@@ -116,4 +116,8 @@ struct ExpiryLogicTests {
         #expect(desktop.frameInterval < phone.frameInterval)
         #expect(DisplayMetrics(width: 800, height: 600, refreshRate: 60, reduceMotion: true).reduceMotion)
     }
+
+    @Test @MainActor func missingPhotoThumbnailStaysNil() {
+        #expect(PhotoStore.thumbnailCGImage(filename: "not-a-real-photo.heic", maxPixelSize: 48) == nil)
+    }
 }

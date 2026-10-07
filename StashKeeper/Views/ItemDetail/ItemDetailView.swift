@@ -18,6 +18,7 @@ struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \StorageLocation.name) private var locations: [StorageLocation]
+    @Environment(\.displayMetrics) private var metrics
 
     @State private var showingDeleteConfirm = false
     @State private var showFullFields = false
@@ -264,6 +265,8 @@ struct ItemDetailView: View {
             }
         }
         .navigationTitle(item.name)
+        .frame(maxWidth: metrics.readableWidth)
+        .frame(maxWidth: .infinity)
         .appEntityIdentifier(EntityIdentifier(for: StashItemEntity.self, identifier: item.id))
         .userActivity("com.piyushpatnaik.StashKeeper.viewItem") { activity in
             activity.title = item.name

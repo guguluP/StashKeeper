@@ -57,6 +57,11 @@ struct CameraCaptureView: View {
         .onDisappear { model.stop() }
     }
 
+    @ScaledMetric(relativeTo: .body) private var shutterDiameter: CGFloat = 72
+    @ScaledMetric(relativeTo: .body) private var chromeIcon: CGFloat = 16
+
+    private var cameraChrome: Color { Color.black.opacity(0.72) }
+
     private var topBar: some View {
         HStack {
             Button {
@@ -64,10 +69,11 @@ struct CameraCaptureView: View {
                 onCancel()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: chromeIcon, weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(12)
-                    .background(.black.opacity(0.4), in: Circle())
+                    .padding(chromeIcon * 0.75)
+                    .background(cameraChrome, in: Circle())
+                    .overlay(Circle().strokeBorder(.white.opacity(0.85), lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close camera")
@@ -78,7 +84,7 @@ struct CameraCaptureView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(.black.opacity(0.4), in: Capsule())
+                    .background(cameraChrome, in: Capsule())
             }
         }
         .padding()
@@ -107,14 +113,14 @@ struct CameraCaptureView: View {
 
     private var shutterBar: some View {
         HStack {
-            Color.clear.frame(width: 64, height: 64)
+            Color.clear.frame(width: shutterDiameter, height: shutterDiameter)
             Spacer()
             Button {
                 model.capturePhoto()
             } label: {
                 ZStack {
-                    Circle().fill(.white).frame(width: 72, height: 72)
-                    Circle().strokeBorder(.white, lineWidth: 3).frame(width: 84, height: 84)
+                    Circle().fill(.white).frame(width: shutterDiameter, height: shutterDiameter)
+                    Circle().strokeBorder(.white, lineWidth: 3).frame(width: shutterDiameter * 1.16, height: shutterDiameter * 1.16)
                 }
             }
             .buttonStyle(.plain)
@@ -136,7 +142,7 @@ struct CameraCaptureView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Use captured photos")
             .disabled(model.capturedThumbnails.isEmpty)
-            .frame(width: 64, height: 64)
+            .frame(width: shutterDiameter, height: shutterDiameter)
         }
         .padding(.horizontal, 32)
         .padding(.bottom, 36)

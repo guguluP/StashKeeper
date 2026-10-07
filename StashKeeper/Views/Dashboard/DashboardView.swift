@@ -167,12 +167,73 @@ struct DashboardView: View {
     }
 
     private var emptyInventory: some View {
-        ContentUnavailableView(
-            "No items yet",
-            systemImage: "camera.viewfinder",
-            description: Text("Photograph a fridge shelf, pantry, or receipt. Apple Intelligence names each item and watches expiry.")
-        )
-        .padding(.top, 24)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Start with one of these")
+                .font(.title3.weight(.semibold))
+            Text("Nothing is saved yet. These samples show what each path looks like. Tap one to do it for real.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            sampleCard(
+                title: "Photograph a shelf",
+                detail: "Milk · Fridge · expires in 4 days",
+                systemImage: "camera.viewfinder",
+                tint: .blue
+            ) {
+                NotificationCenter.default.post(name: .requestNewItemFlow, object: nil)
+            }
+            sampleCard(
+                title: "Scan a receipt",
+                detail: "3 lines ready to catalog, prices filled in",
+                systemImage: "doc.text.viewfinder",
+                tint: .purple
+            ) {
+                showingReceiptScan = true
+            }
+            NavigationLink {
+                LocationsListView()
+            } label: {
+                sampleCardLabel(
+                    title: "Name a place",
+                    detail: "Pantry, Fridge, or a drawer you actually use",
+                    systemImage: "archivebox",
+                    tint: .orange
+                )
+            }
+            .buttonStyle(.pressScale)
+        }
+        .padding(.top, 8)
+    }
+
+    private func sampleCard(title: String, detail: String, systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            sampleCardLabel(title: title, detail: detail, systemImage: systemImage, tint: tint)
+        }
+        .buttonStyle(.pressScale)
+    }
+
+    private func sampleCardLabel(title: String, detail: String, systemImage: String, tint: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(tint)
+                .frame(width: 44, height: 44)
+                .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline)
+                Text(detail).font(.subheadline).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(14)
+        .glassSurface(cornerRadius: 16)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(detail)")
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Kicks off on-demand recipe generation from the full current

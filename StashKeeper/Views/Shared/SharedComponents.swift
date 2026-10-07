@@ -99,8 +99,10 @@ struct ItemThumbnail: View {
     let item: StashItem
     var size: CGFloat = 56
 
+    @ScaledMetric(relativeTo: .body) private var typeScale: CGFloat = 1
     @State private var image: PlatformImage?
-    @State private var didLoad = false
+
+    private var drawnSize: CGFloat { size * typeScale }
 
     var body: some View {
         Group {
@@ -110,7 +112,7 @@ struct ItemThumbnail: View {
                     .transition(.opacity.animation(.easeOut(duration: 0.25)))
             } else if item.photoFilenames.isEmpty {
                 Image(systemName: categoryFallbackIcon)
-                    .font(.system(size: size * 0.4))
+                    .font(.system(size: drawnSize * 0.4))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(.quaternary)
@@ -120,17 +122,19 @@ struct ItemThumbnail: View {
                     .background(.quaternary)
             }
         }
-        .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: size * 0.2, style: .continuous))
+        .frame(width: drawnSize, height: drawnSize)
+        .clipShape(RoundedRectangle(cornerRadius: drawnSize * 0.2, style: .continuous))
         .task(id: item.photoFilenames.first) {
             await loadThumbnail()
         }
     }
 
     private func loadThumbnail() async {
-        guard let filename = item.photoFilenames.first,
-              let data = PhotoStore.loadData(filename: filename) else { return }
-        let loaded = PlatformImage(data: data)
+        guard let filename = item.photoFilenames.first else { return }
+        let pixels = Int(drawnSize * 3)
+        let cgImage = PhotoStore.thumbnailCGImage(filename: filename, maxPixelSize: pixels)
+        guard let cgImage, let loaded = PlatformImage(cgImage: cgImage) else { return }
+        if Task.isCancelled { return }
         withAnimation(.easeOut(duration: 0.25)) {
             image = loaded
         }
@@ -337,6 +341,9 @@ struct PlatformImage {
         guard let img = NSImage(data: data) else { return nil }
         self.nsImage = img
     }
+    init?(cgImage: CGImage) {
+        self.nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+    }
     var resizableImage: Image {
         Image(nsImage: nsImage ?? NSImage())
             .resizable()
@@ -346,6 +353,9 @@ struct PlatformImage {
     init?(data: Data) {
         guard let img = UIImage(data: data) else { return nil }
         self.uiImage = img
+    }
+    init?(cgImage: CGImage) {
+        self.uiImage = UIImage(cgImage: cgImage)
     }
     var resizableImage: Image {
         Image(uiImage: uiImage ?? UIImage())

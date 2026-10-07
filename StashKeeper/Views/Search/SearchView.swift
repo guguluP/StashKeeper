@@ -23,6 +23,7 @@ struct SearchView: View {
     @State private var lastIntent: SearchIntent?
     @State private var searchTask: Task<Void, Never>?
     @Namespace private var heroNamespace
+    @Environment(\.displayMetrics) private var metrics
 
     var body: some View {
         VStack(spacing: 0) {
@@ -84,8 +85,10 @@ struct SearchView: View {
         }
         .padding(12)
         .glassSurface(cornerRadius: 16)
-        .padding(.horizontal)
+        .padding(.horizontal, metrics.horizontalPadding)
         .padding(.top, 8)
+        .frame(maxWidth: metrics.readableWidth)
+        .frame(maxWidth: .infinity)
     }
 
     private var suggestionChips: some View {
@@ -104,7 +107,7 @@ struct SearchView: View {
                     .glassSurface(cornerRadius: 20, interactive: true)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, metrics.horizontalPadding)
             .padding(.vertical, 8)
         }
     }
@@ -125,7 +128,7 @@ struct SearchView: View {
                     BadgeLabel(text: keyword, tint: .gray)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, metrics.horizontalPadding)
         }
         .padding(.bottom, 8)
     }

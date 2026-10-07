@@ -132,6 +132,19 @@ enum PhotoStore {
         try? Data(contentsOf: url(for: filename))
     }
 
+    /// Decodes only enough pixels for a list thumbnail. Lists call this
+    /// while a row is on screen; SwiftUI cancels the task when it scrolls away.
+    static func thumbnailCGImage(filename: String, maxPixelSize: Int) -> CGImage? {
+        let sourceURL = url(for: filename) as CFURL
+        guard let source = CGImageSourceCreateWithURL(sourceURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(32, maxPixelSize),
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
     static func delete(filename: String) {
         let primary = photosDirectory.appendingPathComponent(filename)
         try? FileManager.default.removeItem(at: primary)

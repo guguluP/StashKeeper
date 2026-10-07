@@ -9,6 +9,34 @@
 import Foundation
 import SwiftData
 import SwiftUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
+
+/// Expiry colors that stay readable on a light page and on dark glass.
+/// The widget target compiles this file, so the palette lives next to the model.
+nonisolated enum StashPalette {
+    static var fresh: Color { adaptive(light: (0.00, 0.40, 0.18), dark: (0.55, 0.95, 0.62)) }
+    static var expiring: Color { adaptive(light: (0.55, 0.28, 0.00), dark: (1.00, 0.72, 0.28)) }
+    static var expired: Color { adaptive(light: (0.62, 0.08, 0.10), dark: (1.00, 0.48, 0.45)) }
+
+    private static func adaptive(light: (CGFloat, CGFloat, CGFloat), dark: (CGFloat, CGFloat, CGFloat)) -> Color {
+        #if os(iOS)
+        Color(uiColor: UIColor { traits in
+            let rgb = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+        })
+        #else
+        Color(nsColor: NSColor(name: nil, dynamicProvider: { appearance in
+            let match = appearance.bestMatch(from: [.darkAqua, .aqua])
+            let rgb = match == .darkAqua ? dark : light
+            return NSColor(srgbRed: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+        }))
+        #endif
+    }
+}
 
 nonisolated private final class FormatterCache: @unchecked Sendable {
     let cache = NSCache<NSString, NumberFormatter>()
@@ -202,9 +230,9 @@ extension StashItem {
         var tint: Color {
             switch self {
             case .notPerishable: return .secondary
-            case .fresh: return .green
-            case .expiringSoon: return .orange
-            case .expired: return .red
+            case .fresh: return StashPalette.fresh
+            case .expiringSoon: return StashPalette.expiring
+            case .expired: return StashPalette.expired
             }
         }
 
