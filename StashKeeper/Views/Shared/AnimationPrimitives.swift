@@ -218,7 +218,7 @@ struct ShimmerModifier: ViewModifier {
             .overlay {
                 GeometryReader { proxy in
                     LinearGradient(
-                        colors: [.clear, .white.opacity(0.35), .clear],
+                        colors: [.clear, Color.primary.opacity(0.22), .clear],
                         startPoint: .leading,
                         endPoint: .trailing
                     )

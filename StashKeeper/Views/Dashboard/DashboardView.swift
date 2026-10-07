@@ -453,6 +453,7 @@ private struct MilestonePreviewChip: View {
 private struct AttentionCard: View {
     let item: StashItem
     @Environment(\.displayMetrics) private var metrics
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovering = false
 
     var body: some View {
@@ -463,7 +464,7 @@ private struct AttentionCard: View {
                         .font(.caption)
                         .padding(6)
                         .background(item.expiryStatus.tint, in: Circle())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(StashPalette.ink(for: colorScheme))
                         .padding(6)
                 }
 

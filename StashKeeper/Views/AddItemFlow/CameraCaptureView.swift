@@ -113,7 +113,7 @@ struct CameraCaptureView: View {
 
     private var shutterBar: some View {
         HStack {
-            Color.clear.frame(width: shutterDiameter, height: shutterDiameter)
+            Color.clear.frame(width: shutterDiameter * 1.16, height: shutterDiameter * 1.16)
             Spacer()
             Button {
                 model.capturePhoto()
@@ -142,7 +142,7 @@ struct CameraCaptureView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Use captured photos")
             .disabled(model.capturedThumbnails.isEmpty)
-            .frame(width: shutterDiameter, height: shutterDiameter)
+            .frame(width: shutterDiameter * 1.16, height: shutterDiameter * 1.16)
         }
         .padding(.horizontal, 32)
         .padding(.bottom, 36)

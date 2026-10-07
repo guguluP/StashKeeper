@@ -48,39 +48,63 @@ struct ShoppingListView: View {
 
     private func row(_ item: StashItem) -> some View {
         let handled = ShoppingListStore.isHandled(id: item.id, expiry: item.expiryDate)
-        return HStack(spacing: 12) {
-            Button {
-                ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: !handled)
-                revision += 1
-            } label: {
-                Image(systemName: handled ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(handled ? StashPalette.fresh : .secondary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(handled ? "Mark \(item.name) as still needed" : "Check off \(item.name)")
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.body)
-                    .strikethrough(handled)
-                Text(caption(for: item))
-                    .font(.subheadline)
-                    .foregroundStyle(item.expiryStatus.tint)
-            }
-            Spacer(minLength: 0)
-            if item.quantity > 0 {
-                Button("Used one") {
-                    _ = item.consumeOneUnit(in: modelContext)
-                    ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: true)
-                    revision += 1
-                }
-                .font(.subheadline)
-                .buttonStyle(.bordered)
-            }
+        return ViewThatFits(in: .horizontal) {
+            shoppingRow(item, handled: handled, stacked: false)
+            shoppingRow(item, handled: handled, stacked: true)
         }
         .padding(.vertical, 4)
         .opacity(handled ? 0.55 : 1)
+    }
+
+    private func shoppingRow(_ item: StashItem, handled: Bool, stacked: Bool) -> some View {
+        let check = Button {
+            ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: !handled)
+            revision += 1
+        } label: {
+            Image(systemName: handled ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .foregroundStyle(handled ? StashPalette.fresh : .secondary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(handled ? "Mark \(item.name) as still needed" : "Check off \(item.name)")
+
+        let labels = VStack(alignment: .leading, spacing: 2) {
+            Text(item.name)
+                .font(.body)
+                .strikethrough(handled)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(caption(for: item))
+                .font(.subheadline)
+                .foregroundStyle(item.expiryStatus.tint)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+
+        let used = Button("Used one") {
+            _ = item.consumeOneUnit(in: modelContext)
+            ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: true)
+            revision += 1
+        }
+        .font(.subheadline)
+        .buttonStyle(.bordered)
+
+        return Group {
+            if stacked {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 12) {
+                        check
+                        labels
+                    }
+                    if item.quantity > 0 { used }
+                }
+            } else {
+                HStack(alignment: .center, spacing: 12) {
+                    check
+                    labels
+                    Spacer(minLength: 8)
+                    if item.quantity > 0 { used }
+                }
+            }
+        }
     }
 
     private func caption(for item: StashItem) -> String {

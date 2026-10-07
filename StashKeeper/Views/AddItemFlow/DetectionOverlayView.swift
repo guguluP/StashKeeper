@@ -151,7 +151,8 @@ struct DetectionOverlayView: View {
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(tint, in: Capsule())
+            .background(.black.opacity(0.72), in: Capsule())
+            .overlay(Capsule().strokeBorder(tint, lineWidth: 1.5))
             .foregroundStyle(.white)
             .padding(4)
             .opacity(rect.width > 60 ? 1 : 0)

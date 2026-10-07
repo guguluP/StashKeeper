@@ -36,10 +36,10 @@ enum MilestoneTier: Int, CaseIterable, Comparable {
 
     var tint: Color {
         switch self {
-        case .bronze: return Color(red: 0.80, green: 0.50, blue: 0.20)
-        case .silver: return Color(red: 0.75, green: 0.76, blue: 0.78)
-        case .gold: return Color(red: 1.0, green: 0.84, blue: 0.0)
-        case .platinum: return Color(red: 0.60, green: 0.85, blue: 0.95)
+        case .bronze: return StashPalette.bronze
+        case .silver: return StashPalette.silver
+        case .gold: return StashPalette.gold
+        case .platinum: return StashPalette.platinum
         }
     }
 

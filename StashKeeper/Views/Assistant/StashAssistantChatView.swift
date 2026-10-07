@@ -133,7 +133,6 @@ struct StashAssistantChatView: View {
             .frame(maxWidth: metrics.readableWidth)
 
             Spacer()
-            Spacer()
         }
     }
 
@@ -277,7 +276,8 @@ private struct ChatBubble: View {
             } else {
                 Text(message.text)
                     .font(.subheadline)
-                    .foregroundStyle(message.role == .user ? .white : .primary)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(message.role == .user ? .trailing : .leading)
             }
         }
         .padding(.horizontal, 14)
@@ -287,7 +287,7 @@ private struct ChatBubble: View {
         .background {
             if message.role == .user {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.accentColor.gradient)
+                    .fill(Color.accentColor.opacity(0.22))
             } else {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(.regularMaterial)

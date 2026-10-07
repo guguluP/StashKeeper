@@ -21,6 +21,16 @@ nonisolated enum StashPalette {
     static var fresh: Color { adaptive(light: (0.00, 0.40, 0.18), dark: (0.55, 0.95, 0.62)) }
     static var expiring: Color { adaptive(light: (0.55, 0.28, 0.00), dark: (1.00, 0.72, 0.28)) }
     static var expired: Color { adaptive(light: (0.62, 0.08, 0.10), dark: (1.00, 0.48, 0.45)) }
+    static var bronze: Color { adaptive(light: (0.45, 0.26, 0.05), dark: (0.90, 0.62, 0.32)) }
+    static var silver: Color { adaptive(light: (0.32, 0.34, 0.38), dark: (0.82, 0.84, 0.88)) }
+    static var gold: Color { adaptive(light: (0.48, 0.34, 0.00), dark: (1.00, 0.86, 0.35)) }
+    static var platinum: Color { adaptive(light: (0.12, 0.38, 0.52), dark: (0.65, 0.90, 0.98)) }
+
+    /// Ink that sits on top of an expiry fill. The fills are dark in light
+    /// mode and light in dark mode, so the ink flips with them.
+    static func ink(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? .black : .white
+    }
 
     private static func adaptive(light: (CGFloat, CGFloat, CGFloat), dark: (CGFloat, CGFloat, CGFloat)) -> Color {
         #if os(iOS)

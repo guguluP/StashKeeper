@@ -245,10 +245,12 @@ private struct CelebrationOverlay: View {
                         .controlSize(.large)
                 }
                 .padding(24)
+                .frame(maxWidth: 480)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .padding(32)
+                .padding(24)
                 .scaleEffect(scale)
                 .opacity(opacity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .onAppear {
