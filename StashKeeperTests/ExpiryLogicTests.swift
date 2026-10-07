@@ -1,5 +1,8 @@
 import Testing
 import Foundation
+import ImageIO
+import CoreGraphics
+import UniformTypeIdentifiers
 import SwiftData
 @testable import StashKeeper
 
@@ -63,5 +66,42 @@ struct ExpiryLogicTests {
         let durable = decoded.filter { !$0.isStreaming && !$0.text.isEmpty }
         #expect(durable.map(\.text) == ["What's expiring?"])
         #expect(durable.first?.role == .user)
+    }
+
+    @Test func photoAnalysisCompletesWithoutAborting() async throws {
+        let width = 64
+        let height = 64
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            Issue.record("Could not draw a test image")
+            return
+        }
+        context.setFillColor(CGColor(red: 0.85, green: 0.2, blue: 0.15, alpha: 1))
+        context.fill(CGRect(x: 8, y: 8, width: 40, height: 40))
+        guard let filled = context.makeImage() else {
+            Issue.record("Could not draw a test image")
+            return
+        }
+        let encoded = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(encoded, UTType.png.identifier as CFString, 1, nil) else {
+            Issue.record("Could not encode a test image")
+            return
+        }
+        CGImageDestinationAddImage(destination, filled, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            Issue.record("Could not encode a test image")
+            return
+        }
+
+        let observations = try await VisionAnalyzer().analyze(imageData: encoded as Data)
+        #expect(!observations.regions.isEmpty)
     }
 }

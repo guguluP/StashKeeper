@@ -34,33 +34,20 @@ actor BarcodeScanner {
             return []
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            let request = VNDetectBarcodesRequest { request, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                let observations = (request.results as? [VNBarcodeObservation]) ?? []
-                let barcodes = observations.compactMap { observation -> DetectedBarcode? in
-                    guard let payload = observation.payloadStringValue else { return nil }
-                    return DetectedBarcode(
-                        payload: payload,
-                        symbology: observation.symbology.rawValue,
-                        normalizedBoundingBox: observation.boundingBox
-                    )
-                }
-                continuation.resume(returning: barcodes)
-            }
-            // Restrict to symbologies actually used on retail packaging to
-            // reduce false positives from incidental patterns in the photo.
-            request.symbologies = [.ean13, .ean8, .upce, .code128, .code39, .qr, .itf14, .dataMatrix]
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        let request = VNDetectBarcodesRequest()
+        // Restrict to symbologies actually used on retail packaging to
+        // reduce false positives from incidental patterns in the photo.
+        request.symbologies = [.ean13, .ean8, .upce, .code128, .code39, .qr, .itf14, .dataMatrix]
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        try handler.perform([request])
+        let observations = (request.results as? [VNBarcodeObservation]) ?? []
+        return observations.compactMap { observation -> DetectedBarcode? in
+            guard let payload = observation.payloadStringValue else { return nil }
+            return DetectedBarcode(
+                payload: payload,
+                symbology: observation.symbology.rawValue,
+                normalizedBoundingBox: observation.boundingBox
+            )
         }
     }
 

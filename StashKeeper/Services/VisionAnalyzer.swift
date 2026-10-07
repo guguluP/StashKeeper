@@ -31,11 +31,10 @@ import CoreGraphics
 /// currency symbol is probably a price) — a flat `[String]` of OCR results
 /// throws this signal away and forces the language model to guess blind.
 ///
-/// Explicitly `nonisolated`: constructed inside the nonisolated
-/// `VisionAnalyzer` actor's callback closures, which run off the main
-/// actor. Under this project's `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`
-/// setting, a plain struct without this annotation would otherwise be
-/// implicitly main-actor-isolated and unusable from that context.
+/// Explicitly `nonisolated`. Under this project's
+/// `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` setting, a plain struct
+/// without this annotation would be main-actor-isolated and unusable
+/// from the Vision analyzer actor.
 nonisolated struct OCRLine: Sendable, Equatable {
     let text: String
     /// Vision's per-observation confidence (0...1) for its top candidate.
@@ -191,34 +190,22 @@ actor VisionAnalyzer {
     /// Proposes candidate bounding boxes for distinct objects in the image
     /// using saliency + rectangle detection, then merges overlapping boxes.
     private func proposeRegions(cgImage: CGImage) async throws -> [DetectedRegionProposal] {
-        try await withCheckedThrowingContinuation { continuation in
-            let request = VNGenerateObjectnessBasedSaliencyImageRequest { request, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                guard let observation = (request.results as? [VNSaliencyImageObservation])?.first else {
-                    continuation.resume(returning: [])
-                    return
-                }
-
-                let proposals = (observation.salientObjects ?? []).compactMap { salientObject -> DetectedRegionProposal? in
-                    let box = salientObject.boundingBox
-                    guard box.width * box.height >= self.minRegionAreaFraction,
-                          salientObject.confidence >= self.minObjectnessConfidence else { return nil }
-                    return DetectedRegionProposal(boundingBox: box, confidence: salientObject.confidence)
-                }
-
-                continuation.resume(returning: self.mergeOverlapping(proposals))
-            }
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        // Read results after perform returns. A completion handler runs on
+        // Vision's own queue, and under default MainActor isolation that
+        // callback is checked as actor-isolated and aborts the process.
+        let request = VNGenerateObjectnessBasedSaliencyImageRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        try handler.perform([request])
+        guard let observation = (request.results as? [VNSaliencyImageObservation])?.first else {
+            return []
         }
+        let proposals = (observation.salientObjects ?? []).compactMap { salientObject -> DetectedRegionProposal? in
+            let box = salientObject.boundingBox
+            guard box.width * box.height >= minRegionAreaFraction,
+                  salientObject.confidence >= minObjectnessConfidence else { return nil }
+            return DetectedRegionProposal(boundingBox: box, confidence: salientObject.confidence)
+        }
+        return mergeOverlapping(proposals)
     }
 
     /// Merges bounding boxes that overlap heavily (likely the same physical
@@ -271,37 +258,25 @@ actor VisionAnalyzer {
     ]
 
     private func classify(cgImage: CGImage) async throws -> [String] {
-        try await withCheckedThrowingContinuation { continuation in
-            let request = VNClassifyImageRequest { request, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                let observations = (request.results as? [VNClassificationObservation]) ?? []
-                let scored = observations
-                    .filter { $0.confidence > 0.12 }
-                    .sorted { $0.confidence > $1.confidence }
-                    .prefix(8)
-                    .map { $0.identifier.replacingOccurrences(of: "_", with: " ") }
+        let request = VNClassifyImageRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        try handler.perform([request])
+        let observations = (request.results as? [VNClassificationObservation]) ?? []
+        let scored = observations
+            .filter { $0.confidence > 0.12 }
+            .sorted { $0.confidence > $1.confidence }
+            .prefix(8)
+            .map { $0.identifier.replacingOccurrences(of: "_", with: " ") }
 
-                // Push generic labels to the end rather than filtering them
-                // out entirely — if literally nothing else was detected,
-                // "material" is still marginally better context than
-                // nothing, but a specific label like "wristwatch" or
-                // "banana" should always win the naming decision when
-                // available.
-                let specific = scored.filter { !Self.genericLowInformationLabels.contains($0.lowercased()) }
-                let generic = scored.filter { Self.genericLowInformationLabels.contains($0.lowercased()) }
-                continuation.resume(returning: specific + generic)
-            }
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
+        // Push generic labels to the end rather than filtering them
+        // out entirely — if literally nothing else was detected,
+        // "material" is still marginally better context than
+        // nothing, but a specific label like "wristwatch" or
+        // "banana" should always win the naming decision when
+        // available.
+        let specific = scored.filter { !Self.genericLowInformationLabels.contains($0.lowercased()) }
+        let generic = scored.filter { Self.genericLowInformationLabels.contains($0.lowercased()) }
+        return specific + generic
     }
 
     // MARK: - OCR (global or restricted to a region of interest)
@@ -313,59 +288,47 @@ actor VisionAnalyzer {
     /// from "small text with a currency symbol" (likely a price) instead of
     /// reasoning over an undifferentiated bag of words.
     private func recognizeText(cgImage: CGImage, regionOfInterest: CGRect?) async throws -> [OCRLine] {
-        try await withCheckedThrowingContinuation { continuation in
-            let request = VNRecognizeTextRequest { request, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
-                let lines: [OCRLine] = observations.compactMap { observation in
-                    // Consider the top 2 candidates: if the top candidate
-                    // looks like a garbled read of a price/number (Vision
-                    // frequently confuses similar-looking currency symbols
-                    // and digits at small sizes) but a lower-ranked
-                    // candidate parses more cleanly as a price, prefer the
-                    // cleaner one — this directly targets the accuracy gap
-                    // on printed price tags, which are often small, low-
-                    // contrast text where the top candidate alone is
-                    // unreliable.
-                    let candidates = observation.topCandidates(2)
-                    guard let top = candidates.first else { return nil }
-                    let best = candidates.first(where: { self.looksLikePriceOrNumber($0.string) }) ?? top
-                    return OCRLine(
-                        text: best.string,
-                        confidence: best.confidence,
-                        boundingBox: observation.boundingBox
-                    )
-                }
-                continuation.resume(returning: lines)
-            }
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-            request.automaticallyDetectsLanguage = true
-            // Default minimumTextHeight (~0.03125 of image height) can miss
-            // small price-tag or fine-print text in a wide shelf photo
-            // where the item only occupies part of the frame. Lowering it
-            // trades a little speed for catching that text — an acceptable
-            // cost since this runs once per captured photo, not live.
-            request.minimumTextHeight = 0.015
-            // Real vocabulary terms that commonly appear on Indian and
-            // international price tags/labels, given priority over the
-            // built-in dictionary so language-correction doesn't "fix" them
-            // into an unrelated dictionary word (a real failure mode of
-            // usesLanguageCorrection on price-tag abbreviations).
-            request.customWords = ["MRP", "Rs", "incl", "excl", "GST", "SKU", "UPC", "qty", "exp", "mfg"]
-            if let regionOfInterest {
-                request.regionOfInterest = regionOfInterest
-            }
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        request.automaticallyDetectsLanguage = true
+        // Default minimumTextHeight (~0.03125 of image height) can miss
+        // small price-tag or fine-print text in a wide shelf photo
+        // where the item only occupies part of the frame. Lowering it
+        // trades a little speed for catching that text — an acceptable
+        // cost since this runs once per captured photo, not live.
+        request.minimumTextHeight = 0.015
+        // Real vocabulary terms that commonly appear on Indian and
+        // international price tags/labels, given priority over the
+        // built-in dictionary so language-correction doesn't "fix" them
+        // into an unrelated dictionary word (a real failure mode of
+        // usesLanguageCorrection on price-tag abbreviations).
+        request.customWords = ["MRP", "Rs", "incl", "excl", "GST", "SKU", "UPC", "qty", "exp", "mfg"]
+        if let regionOfInterest {
+            request.regionOfInterest = regionOfInterest
+        }
 
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        try handler.perform([request])
+        let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
+        return observations.compactMap { observation in
+            // Consider the top 2 candidates: if the top candidate
+            // looks like a garbled read of a price/number (Vision
+            // frequently confuses similar-looking currency symbols
+            // and digits at small sizes) but a lower-ranked
+            // candidate parses more cleanly as a price, prefer the
+            // cleaner one — this directly targets the accuracy gap
+            // on printed price tags, which are often small, low-
+            // contrast text where the top candidate alone is
+            // unreliable.
+            let candidates = observation.topCandidates(2)
+            guard let top = candidates.first else { return nil }
+            let best = candidates.first(where: { looksLikePriceOrNumber($0.string) }) ?? top
+            return OCRLine(
+                text: best.string,
+                confidence: best.confidence,
+                boundingBox: observation.boundingBox
+            )
         }
     }
 
