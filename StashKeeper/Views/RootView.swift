@@ -49,15 +49,18 @@ struct RootView: View {
     @Query private var allItems: [StashItem]
 
     var body: some View {
-        #if os(iOS)
-        if horizontalSizeClass == .compact {
-            compactLayout
-        } else {
+        Group {
+            #if os(iOS)
+            if horizontalSizeClass == .compact {
+                compactLayout
+            } else {
+                regularLayout
+            }
+            #else
             regularLayout
+            #endif
         }
-        #else
-        regularLayout
-        #endif
+        .displayAdaptive()
     }
 
     // MARK: - iPhone layout (compact width)

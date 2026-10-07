@@ -104,4 +104,16 @@ struct ExpiryLogicTests {
         let observations = try await VisionAnalyzer().analyze(imageData: encoded as Data)
         #expect(!observations.regions.isEmpty)
     }
+
+    @Test func layoutFollowsWindowWidthAndRefreshRate() {
+        let phone = DisplayMetrics(width: 390, height: 844, refreshRate: 60, reduceMotion: false)
+        let desktop = DisplayMetrics(width: 1440, height: 900, refreshRate: 120, reduceMotion: false)
+        #expect(phone.columnCount == 1)
+        #expect(desktop.columnCount == 3)
+        #expect(phone.horizontalPadding < desktop.horizontalPadding)
+        #expect(desktop.readableWidth < desktop.width)
+        #expect(desktop.attentionCardWidth > phone.attentionCardWidth)
+        #expect(desktop.frameInterval < phone.frameInterval)
+        #expect(DisplayMetrics(width: 800, height: 600, refreshRate: 60, reduceMotion: true).reduceMotion)
+    }
 }

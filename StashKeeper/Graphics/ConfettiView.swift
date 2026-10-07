@@ -20,7 +20,7 @@ struct ConfettiView: UIViewRepresentable {
         let view = MTKView()
         view.enableSetNeedsDisplay = false
         view.isPaused = false
-        view.preferredFramesPerSecond = 60
+        view.preferredFramesPerSecond = DisplayRefresh.maximumFramesPerSecond
         view.backgroundColor = .clear
         view.isOpaque = false
         view.framebufferOnly = false
@@ -52,7 +52,7 @@ struct ConfettiView: NSViewRepresentable {
         let view = MTKView()
         view.enableSetNeedsDisplay = false
         view.isPaused = false
-        view.preferredFramesPerSecond = 60
+        view.preferredFramesPerSecond = DisplayRefresh.maximumFramesPerSecond
         view.layer?.isOpaque = false
         configureRenderer(for: view, coordinator: context.coordinator)
         return view

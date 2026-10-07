@@ -21,6 +21,7 @@ struct DashboardView: View {
     @State private var isLoadingRecipeIdeas = false
     @State private var showingReceiptScan = false
     @Namespace private var heroNamespace
+    @Environment(\.displayMetrics) private var metrics
 
     private var attentionItems: [StashItem] {
         ExpiryEngine.shared.attentionNeeded(items: allItems)
@@ -32,7 +33,7 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 28) {
+            LazyVStack(alignment: .leading, spacing: metrics.sectionSpacing) {
                 todayHero
                 quickActions
 
@@ -56,10 +57,11 @@ struct DashboardView: View {
                     emptyInventory
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, metrics.horizontalPadding)
             .padding(.vertical, 12)
+            .adaptivePage()
             .opacity(hasAppeared ? 1 : 0)
-            .offset(y: hasAppeared ? 0 : 16)
+            .offset(y: metrics.reduceMotion ? 0 : (hasAppeared ? 0 : 12))
         }
         .background { StashTheme.screenBackground }
         .navigationTitle("Home")
@@ -67,7 +69,7 @@ struct DashboardView: View {
         .navigationBarTitleDisplayMode(.large)
         #endif
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            withAnimation(.stashSpring(for: metrics)) {
                 hasAppeared = true
             }
         }
@@ -122,16 +124,22 @@ struct DashboardView: View {
     }
 
     private var quickActions: some View {
-        HStack(spacing: 10) {
-            quickActionTile(title: "Ask", systemImage: "sparkles", tint: .blue) {
-                showingAssistant = true
-            }
-            quickActionTile(title: "Cook", systemImage: "fork.knife", tint: .orange) {
-                requestRecipeIdeas()
-            }
-            quickActionTile(title: "Receipt", systemImage: "doc.text.viewfinder", tint: .purple) {
-                showingReceiptScan = true
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { quickActionButtons }
+            VStack(spacing: 10) { quickActionButtons }
+        }
+    }
+
+    @ViewBuilder
+    private var quickActionButtons: some View {
+        quickActionTile(title: "Ask", systemImage: "sparkles", tint: .blue) {
+            showingAssistant = true
+        }
+        quickActionTile(title: "Cook", systemImage: "fork.knife", tint: .orange) {
+            requestRecipeIdeas()
+        }
+        quickActionTile(title: "Receipt", systemImage: "doc.text.viewfinder", tint: .purple) {
+            showingReceiptScan = true
         }
     }
 
@@ -250,8 +258,12 @@ struct DashboardView: View {
     }
 
     private var statsRow: some View {
-        StashGlassGroup(spacing: 12) {
-            HStack(spacing: 12) {
+        let columns = Array(
+            repeating: GridItem(.flexible(), spacing: 12),
+            count: min(3, max(metrics.columnCount, metrics.width >= 520 ? 3 : 1))
+        )
+        return StashGlassGroup(spacing: 12) {
+            LazyVGrid(columns: columns, spacing: 12) {
                 StatTile(title: "Total Items", value: "\(allItems.count)", systemImage: "shippingbox", tint: .blue)
                 StatTile(title: "Locations", value: "\(locations.count)", systemImage: "archivebox", tint: .purple)
                 StatTile(title: "Expiring Soon", value: "\(attentionItems.count)", systemImage: "clock.badge.exclamationmark", tint: .orange)
@@ -341,6 +353,8 @@ private struct StatTile: View {
 
 private struct MilestonePreviewChip: View {
     let milestone: CategoryMilestone
+    @Environment(\.displayMetrics) private var metrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animatedProgress: Double = 0
 
     var body: some View {
@@ -362,10 +376,14 @@ private struct MilestonePreviewChip: View {
                 .font(.caption2.weight(.medium))
                 .lineLimit(1)
         }
-        .frame(width: 84)
+        .frame(width: metrics.locationChipWidth + 16)
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.75).delay(0.1)) {
+            if reduceMotion {
                 animatedProgress = milestone.progress
+            } else {
+                withAnimation(.stashSpring(for: metrics).delay(0.1)) {
+                    animatedProgress = milestone.progress
+                }
             }
         }
     }
@@ -373,11 +391,12 @@ private struct MilestonePreviewChip: View {
 
 private struct AttentionCard: View {
     let item: StashItem
+    @Environment(\.displayMetrics) private var metrics
     @State private var isHovering = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ItemThumbnail(item: item, size: 90)
+            ItemThumbnail(item: item, size: metrics.attentionCardWidth - 28)
                 .overlay(alignment: .topTrailing) {
                     Image(systemName: item.expiryStatus.systemImage)
                         .font(.caption)
@@ -397,7 +416,7 @@ private struct AttentionCard: View {
                     .foregroundStyle(item.expiryStatus.tint)
             }
         }
-        .frame(width: 110)
+        .frame(width: metrics.attentionCardWidth)
         .padding(10)
         .glassSurface(cornerRadius: 16)
         #if os(macOS)
@@ -412,6 +431,7 @@ private struct AttentionCard: View {
 
 private struct LocationChip: View {
     let location: StorageLocation
+    @Environment(\.displayMetrics) private var metrics
     @State private var isHovering = false
 
     var body: some View {
@@ -429,7 +449,7 @@ private struct LocationChip: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .frame(width: 76)
+        .frame(width: metrics.locationChipWidth)
         #if os(macOS)
         .onHover { hovering in
             withAnimation(.stashSpring) { isHovering = hovering }

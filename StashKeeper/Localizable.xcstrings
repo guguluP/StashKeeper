@@ -1,52 +1,626 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
+    "·" : {
+
+    },
+    "· %@" : {
+
+    },
+    "\"%@\" — %@. Currently have %lld in %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "\"%1$@\" — %2$@. Currently have %3$lld in %4$@."
+          }
+        }
+      }
+    },
+    "%@" : {
+
+    },
+    "%@ — %lld items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ — %2$lld items"
+          }
+        }
+      }
+    },
+    "%@ · %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "%@ · ×%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · ×%2$lld"
+          }
+        }
+      }
+    },
+    "%@ kcal / serving" : {
+
+    },
+    "%@ Unlocked!" : {
+
+    },
+    "%@, already cataloged" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld captured" : {
+
+    },
+    "%lld days before expiry" : {
+
+    },
+    "%lld item%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld item%2$@"
+          }
+        }
+      }
+    },
+    "%lld items" : {
+
+    },
+    "%lld of %lld cataloged" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld cataloged"
+          }
+        }
+      }
+    },
+    "%lld." : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lldd" : {
+
+    },
+    "%lldd ago" : {
+
+    },
+    "%lldd left" : {
+
+    },
+    "• %@" : {
+
+    },
+    "×%lld" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add ${quantity} ${name} to ${locationName}" : {
+
+    },
     "Add Item" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Item" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Item"
+          }
+        }
       }
+    },
+    "Add Item to Stash" : {
+
+    },
+    "Add Items" : {
+
     },
     "Add location" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add location" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add location"
+          }
+        }
       }
     },
-    "Ask" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask" } } } },
+    "Add notes…" : {
+
+    },
+    "Add photos or a video" : {
+
+    },
+    "Add some fresh produce or pantry items to get recipe suggestions." : {
+
+    },
+    "Adds a basic item to your stash by name, e.g. 'Add batteries to StashKeeper'. For photo-based recognition, open the app instead." : {
+
+    },
+    "AI estimate — please confirm" : {
+
+    },
+    "AI-detected from packaging" : {
+
+    },
+    "All Categories" : {
+
+    },
+    "All Items" : {
+
+    },
+    "Almost There" : {
+
+    },
+    "Already in your inventory?" : {
+
+    },
+    "Amount" : {
+
+    },
+    "Apple Intelligence identifies every item it can find — even multiple products in one photo — and estimates expiry dates for perishables." : {
+
+    },
+    "Apple Intelligence isn't available on this device — names and categories below are rough estimates from barcode/text scanning only. Please double check before saving." : {
+
+    },
+    "Apple Intelligence isn't available on this device, so answers use simpler on-device logic — direct lookups work, but open-ended questions may not." : {
+
+    },
+    "Apple Intelligence isn't available, so items were extracted with simpler logic — double-check names and prices before confirming." : {
+
+    },
+    "Ask" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask"
+          }
+        }
+      }
+    },
+    "Ask about your stash" : {
+
+    },
     "Ask something…" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ask something…" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask something…"
+          }
+        }
+      }
+    },
+    "Assistant said %@" : {
+
+    },
+    "Backup" : {
+
+    },
+    "Barcode" : {
+
     },
     "Barcode lookup" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Barcode lookup" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barcode lookup"
+          }
+        }
+      }
     },
     "Barcodes with no match" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Barcodes with no match" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barcodes with no match"
+          }
+        }
+      }
+    },
+    "Barcodes with no match: %@" : {
+
+    },
+    "Camera access is needed to take photos" : {
+
+    },
+    "Cancel" : {
+
     },
     "Catalog %@" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Catalog %@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catalog %@"
+          }
+        }
+      }
+    },
+    "Category" : {
+
+    },
+    "Checking your stash for ideas…" : {
+
+    },
+    "Choose from Photos" : {
+
+    },
+    "Choose Photos or Video" : {
+
     },
     "Clear lookup history" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear lookup history" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear lookup history"
+          }
+        }
+      }
     },
     "Clear search" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear search" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear search"
+          }
+        }
+      }
     },
-    "Close" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } } } },
+    "Close" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
     "Close camera" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close camera" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close camera"
+          }
+        }
+      }
     },
-    "Cook" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cook" } } } },
+    "Cook" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cook"
+          }
+        }
+      }
+    },
+    "Couldn't find that item." : {
+
+    },
+    "Couldn't identify any purchased items on this receipt. You can still add items normally from the Dashboard." : {
+
+    },
+    "Currency" : {
+
+    },
+    "Current Streak" : {
+
+    },
+    "days" : {
+
+    },
+    "Decrements an item's quantity by one from the widget or Shortcuts." : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete \"%@\"?" : {
+
+    },
+    "Delete Item" : {
+
+    },
+    "Delete this item?" : {
+
+    },
+    "Detected from price tag in photo" : {
+
+    },
+    "Done" : {
+
+    },
     "Edit %@" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit %@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit %@"
+          }
+        }
+      }
+    },
+    "Edit Item" : {
+
+    },
+    "Estimated — please confirm this date" : {
+
+    },
+    "Estimated by Apple Intelligence — always check packaging for exact values." : {
+
+    },
+    "Existing Location" : {
+
+    },
+    "Expired" : {
+
+    },
+    "Expiry Date" : {
+
+    },
+    "Expiry reminders" : {
+
+    },
+    "Export inventory as JSON" : {
+
     },
     "Filter and sort" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter and sort" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter and sort"
+          }
+        }
+      }
     },
-    "Hits" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hits" } } } },
-    "Message" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Message" } } } },
-    "Miss rate" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Miss rate" } } } },
-    "Misses" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Misses" } } } },
+    "Find ${query} in storage" : {
+
+    },
+    "Find an Item in Storage" : {
+
+    },
+    "Find Item" : {
+
+    },
+    "Finds where an item is stored, e.g. 'Where is my passport?'" : {
+
+    },
+    "Freshness" : {
+
+    },
+    "From your receipt scan. Take a photo of the actual item so it can be cataloged with an accurate name, category, and expiry." : {
+
+    },
+    "Hide recipe" : {
+
+    },
+    "Hits" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hits"
+          }
+        }
+      }
+    },
+    "Home" : {
+
+    },
+    "How Many" : {
+
+    },
+    "How many ${query} do I have" : {
+
+    },
+    "How Many of an Item" : {
+
+    },
+    "I can check what you have, what's expiring, and suggest things to cook — using your inventory and, if you allow it, today's Health activity." : {
+
+    },
+    "I couldn't find anything matching \"%@\" in your stash." : {
+
+    },
+    "I don't see any items in the \"%@\" category." : {
+
+    },
+    "I don't see any items stored in \"%@\"." : {
+
+    },
+    "I'll remind you about %@ tomorrow." : {
+
+    },
+    "Icon" : {
+
+    },
+    "Import inventory JSON" : {
+
+    },
+    "Ingredients" : {
+
+    },
+    "Item" : {
+
+    },
+    "Item ID" : {
+
+    },
+    "Item Name" : {
+
+    },
+    "Items by Category" : {
+
+    },
+    "Items by Location" : {
+
+    },
+    "Lay the bill flat and capture the whole thing in good light. Apple Intelligence will pull out each purchased item so you can catalog them one by one." : {
+
+    },
+    "List Items by Category" : {
+
+    },
+    "List Items in a Location" : {
+
+    },
+    "List my ${category} items" : {
+
+    },
+    "Lists items in a category, e.g. 'What electronics do I have stored?'" : {
+
+    },
+    "Lists items in your stash that are expiring soon or have expired." : {
+
+    },
+    "Lists what's stored in a specific place, e.g. 'What's in my fridge?'" : {
+
+    },
+    "Location" : {
+
+    },
+    "Location Name" : {
+
+    },
+    "Locations" : {
+
+    },
+    "Locations are created automatically when you add items, or you can add one manually." : {
+
+    },
+    "Longest: %lld day%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Longest: %1$lld day%2$@"
+          }
+        }
+      }
+    },
+    "Low confidence — please double check" : {
+
+    },
+    "Matched via %@" : {
+
+    },
+    "Message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message"
+          }
+        }
+      }
+    },
+    "Milestones" : {
+
+    },
+    "Miss rate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miss rate"
+          }
+        }
+      }
+    },
+    "Misses" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misses"
+          }
+        }
+      }
+    },
+    "Name" : {
+
+    },
+    "Needs attention" : {
+
+    },
     "New conversation" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "New conversation" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New conversation"
+          }
+        }
+      }
+    },
+    "New Item…" : {
+
+    },
+    "New Location" : {
+
+    },
+    "Nice!" : {
+
+    },
+    "No Ideas Right Now" : {
+
+    },
+    "No Items" : {
+
+    },
+    "No Items Found" : {
+
+    },
+    "No items yet" : {
+
+    },
+    "No Locations Yet" : {
+
+    },
+    "No Milestones Yet" : {
+
+    },
+    "No online match found" : {
+
     },
     "No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases." : {
       "localizations" : {
@@ -58,23 +632,349 @@
         }
       }
     },
-    "Receipt" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Receipt" } } } },
+    "None" : {
+
+    },
+    "None of your items have a recorded price yet." : {
+
+    },
+    "Notes" : {
+
+    },
+    "Nothing expiring soon" : {
+
+    },
+    "Nothing is expiring soon. You're all caught up." : {
+
+    },
+    "Nothing Kept Here Yet" : {
+
+    },
+    "Notifications: %@" : {
+
+    },
+    "Open ${item}" : {
+
+    },
+    "Open Item" : {
+
+    },
+    "Open Stash Item" : {
+
+    },
+    "Open StashKeeper" : {
+
+    },
+    "Open StashKeeper daily to keep it going" : {
+
+    },
+    "Opens an item in StashKeeper." : {
+
+    },
+    "Opens StashKeeper to items that need attention." : {
+
+    },
+    "Opens the camera flow to catalog a new item." : {
+
+    },
+    "Or create new location" : {
+
+    },
+    "Perishability" : {
+
+    },
+    "Perishable" : {
+
+    },
+    "Photo %lld — %lld item%@ found" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Photo %1$lld — %2$lld item%3$@ found"
+          }
+        }
+      }
+    },
+    "Photograph a fridge shelf, pantry, or receipt. Apple Intelligence names each item and watches expiry." : {
+
+    },
+    "Photograph your receipt" : {
+
+    },
+    "Photograph: %@" : {
+
+    },
+    "Photos are not inside the JSON; they stay in this device's photo store." : {
+
+    },
+    "Price" : {
+
+    },
+    "Pushes an item's expiry reminder by one day." : {
+
+    },
+    "Qty %lld · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Qty %1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "Quantity" : {
+
+    },
+    "Quantity: %lld" : {
+
+    },
+    "Quick Add" : {
+
+    },
+    "Quickly Add an Item" : {
+
+    },
+    "Quit" : {
+
+    },
+    "Reading your receipt…" : {
+
+    },
+    "Receipt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receipt"
+          }
+        }
+      }
+    },
+    "Recently Added" : {
+
+    },
+    "Recipe Ideas" : {
+
+    },
+    "Recipe ideas for what you just added" : {
+
+    },
     "Recorded lookups" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recorded lookups" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recorded lookups"
+          }
+        }
+      }
+    },
+    "Remind Tomorrow" : {
+
+    },
+    "Reminders, backup, and how soon we warn you before food goes off." : {
+
+    },
+    "Request notification access" : {
+
+    },
+    "Save (%lld)" : {
+
+    },
+    "Scan Receipt" : {
+
+    },
+    "Search" : {
+
+    },
+    "See All" : {
+
     },
     "Send message" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Send message" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send message"
+          }
+        }
+      }
     },
-    "Sending" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sending" } } } },
-    "Settings" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } } } },
+    "Sending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "Show Expiring Items" : {
+
+    },
+    "Show recipe" : {
+
+    },
+    "Sort" : {
+
+    },
+    "Start adding items to unlock achievements for each category." : {
+
+    },
     "Stash Assistant" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Stash Assistant" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stash Assistant"
+          }
+        }
+      }
+    },
+    "Stash Item" : {
+
+    },
+    "StashKeeper" : {
+
+    },
+    "Steps" : {
+
+    },
+    "Subcategory" : {
+
+    },
+    "Subcategory (optional)" : {
+
+    },
+    "Tags" : {
+
+    },
+    "Take a photo now, or select up to 10 photos, or a video panning across your items" : {
+
     },
     "Take photo" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Take photo" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take photo"
+          }
+        }
+      }
+    },
+    "Take Photo" : {
+
+    },
+    "Tap a box to include/exclude it. Tap the pencil to edit details. Dashed purple boxes were merged as another angle of a nearby photo's item — tap to split them back out." : {
+
+    },
+    "Tells you how many of a given item you have in your stash, e.g. 'How many AA batteries do I have?'" : {
+
+    },
+    "Text Found" : {
+
+    },
+    "Text Found on Item" : {
+
+    },
+    "That item is no longer in your stash." : {
+
+    },
+    "Thinking…" : {
+
+    },
+    "This is a new, separate item" : {
+
+    },
+    "This item is no longer available." : {
+
+    },
+    "This item is perishable" : {
+
+    },
+    "Today" : {
+
+    },
+    "Tomorrow" : {
+
+    },
+    "Total Inventory Value" : {
+
+    },
+    "Total Value" : {
+
+    },
+    "Totals up the recorded price of everything in your stash, e.g. 'How much is my stuff worth?'" : {
+
+    },
+    "Try \"expired food\" or \"passport\"" : {
+
+    },
+    "Try Again" : {
+
+    },
+    "Update existing (+%lld)" : {
+
     },
     "Use captured photos" : {
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use captured photos" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use captured photos"
+          }
+        }
+      }
+    },
+    "Use One" : {
+
+    },
+    "Used 1" : {
+
+    },
+    "Used one %@. %lld left." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Used one %1$@. %2$lld left."
+          }
+        }
+      }
+    },
+    "Used the last %@." : {
+
+    },
+    "Warn me" : {
+
+    },
+    "What's Expiring" : {
+
+    },
+    "What's Expiring Soon" : {
+
+    },
+    "What's in ${location}" : {
+
+    },
+    "You said %@" : {
+
+    },
+    "Your stash, your rules" : {
+
     }
   },
   "version" : "1.0"

@@ -92,6 +92,10 @@ HealthKit models consumption, not pantry stock.
 - The assistant keeps its chat transcript on device across launches.
 - English string catalog at `StashKeeper/Localizable.xcstrings`, with
   VoiceOver labels on icon-only controls.
+- Layout follows the window: padding, columns, and card widths come from
+  `DisplayMetrics`, and page content stays within a readable measure on
+  large displays. Confetti samples the screen's maximum refresh rate.
+  Reduced Motion turns those entrances off.
 
 ## Project structure
 

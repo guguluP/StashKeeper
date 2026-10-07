@@ -198,7 +198,12 @@ extension ButtonStyle where Self == PressScaleButtonStyle {
 /// analysis is in progress so the loading state feels alive rather than a
 /// static spinner alone.
 struct ShimmerModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var phase: CGFloat = -1
+
+    /// One sweep stays about 1.4 seconds. A faster panel just draws more
+    /// of the in-between frames; the duration does not shrink.
+    private var shimmerDuration: Double { 1.4 }
 
     func body(content: Content) -> some View {
         content
@@ -216,7 +221,8 @@ struct ShimmerModifier: ViewModifier {
             }
             .clipped()
             .onAppear {
-                withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
+                guard !reduceMotion else { return }
+                withAnimation(.linear(duration: shimmerDuration).repeatForever(autoreverses: false)) {
                     phase = 1
                 }
             }
