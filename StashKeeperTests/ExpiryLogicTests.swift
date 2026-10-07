@@ -117,6 +117,16 @@ struct ExpiryLogicTests {
         #expect(DisplayMetrics(width: 800, height: 600, refreshRate: 60, reduceMotion: true).reduceMotion)
     }
 
+    @Test func shoppingCheckFollowsTheExpiryDate() {
+        let id = UUID()
+        let expiry = Date(timeIntervalSince1970: 1_700_000_000)
+        ShoppingListStore.setHandled(id: id, expiry: expiry, handled: true)
+        #expect(ShoppingListStore.isHandled(id: id, expiry: expiry))
+        #expect(!ShoppingListStore.isHandled(id: id, expiry: expiry.addingTimeInterval(86_400)))
+        ShoppingListStore.setHandled(id: id, expiry: expiry, handled: false)
+        #expect(!ShoppingListStore.isHandled(id: id, expiry: expiry))
+    }
+
     @Test @MainActor func missingPhotoThumbnailStaysNil() {
         #expect(PhotoStore.thumbnailCGImage(filename: "not-a-real-photo.heic", maxPixelSize: 48) == nil)
     }

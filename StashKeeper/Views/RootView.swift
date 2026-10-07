@@ -21,6 +21,8 @@ struct RootView: View {
         case search = "Search"
         case locations = "Locations"
         case allItems = "All Items"
+        case shopping = "Shopping"
+        case household = "Household"
         case milestones = "Milestones"
         case settings = "Settings"
 
@@ -32,6 +34,8 @@ struct RootView: View {
             case .search: return "magnifyingglass"
             case .locations: return "archivebox"
             case .allItems: return "list.bullet"
+            case .shopping: return "checklist"
+            case .household: return "person.2"
             case .milestones: return "rosette"
             case .settings: return "gearshape"
             }
@@ -117,7 +121,7 @@ struct RootView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
-            selectedSection = .dashboard
+            selectedSection = .shopping
         }
     }
 
@@ -132,6 +136,8 @@ struct RootView: View {
         case .search: SearchView()
         case .locations: LocationsListView()
         case .allItems: AllItemsView()
+        case .shopping: ShoppingListView()
+        case .household: HouseholdView()
         case .milestones: MilestonesView()
         case .settings: SettingsView()
         }
@@ -207,7 +213,7 @@ struct RootView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
-            selectedSection = .dashboard
+            selectedSection = .shopping
         }
     }
 
@@ -231,6 +237,10 @@ struct RootView: View {
             LocationsListView()
         case .allItems:
             AllItemsView()
+        case .shopping:
+            ShoppingListView()
+        case .household:
+            HouseholdView()
         case .milestones:
             MilestonesView()
         case .settings:
@@ -239,8 +249,12 @@ struct RootView: View {
     }
 
     private func badgeCount(for section: Section) -> Int {
-        guard section == .dashboard else { return 0 }
-        return ExpiryEngine.shared.attentionNeeded(items: allItems).count
+        if section == .shopping || section == .dashboard {
+            return ExpiryEngine.shared.attentionNeeded(items: allItems).filter {
+                !ShoppingListStore.isHandled(id: $0.id, expiry: $0.expiryDate)
+            }.count
+        }
+        return 0
     }
 
     private func handleOpenURL(_ url: URL) {
