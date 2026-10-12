@@ -140,10 +140,26 @@ enum NutritionLabelReader {
         )
     }
 
+    /// Splits words and the punctuation Natural Language treats as its own
+    /// tokens, so the tag list lines up with the words.
     private static func tokenize(_ line: String) -> [String] {
-        line.replacingOccurrences(of: ",", with: " , ")
-            .split(whereSeparator: \.isWhitespace)
-            .map(String.init)
+        var tokens: [String] = []
+        var current = ""
+        for character in line {
+            if character.isWhitespace || character == "," || character == ":" {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+                if character == "," || character == ":" {
+                    tokens.append(String(character))
+                }
+            } else {
+                current.append(character)
+            }
+        }
+        if !current.isEmpty { tokens.append(current) }
+        return tokens
     }
 
     private static func tag(_ tokens: [String]) -> [String] {
