@@ -303,7 +303,25 @@ actor VisionAnalyzer {
         // built-in dictionary so language-correction doesn't "fix" them
         // into an unrelated dictionary word (a real failure mode of
         // usesLanguageCorrection on price-tag abbreviations).
-        request.customWords = ["MRP", "Rs", "incl", "excl", "GST", "SKU", "UPC", "qty", "exp", "mfg"]
+        let preferredLanguages = ["en-US", "hi-IN"]
+        if let supported = try? VNRecognizeTextRequest.supportedRecognitionLanguages(
+            for: .accurate,
+            revision: VNRecognizeTextRequest.currentRevision
+        ) {
+            let chosen = preferredLanguages.filter { supported.contains($0) }
+            if !chosen.isEmpty {
+                request.recognitionLanguages = chosen
+            }
+        }
+        // Brand and label words that language correction otherwise rewrites.
+        // Indian chocolate and grocery packs are the common case.
+        request.customWords = [
+            "MRP", "Rs", "incl", "excl", "GST", "SKU", "UPC", "qty", "exp", "mfg", "FSSAI",
+            "Cadbury", "Dairy", "Silk", "Bournville", "Amul", "Britannia", "Parle",
+            "Nestle", "KitKat", "Munch", "Perk", "Maggi", "Haldiram", "Bournvita",
+            "Horlicks", "Aashirvaad", "Snickers", "Galaxy", "Hershey", "Eclairs",
+            "Mother", "Kwality", "Dark", "Fantasy", "Oreo", "Hide", "Seek"
+        ]
         if let regionOfInterest {
             request.regionOfInterest = regionOfInterest
         }

@@ -75,6 +75,16 @@ final class StashItem {
     /// How many of this item / unit of this item are kept at this location.
     var quantity: Int
 
+    /// How many to keep on hand. Zero means no target. The buy list shows
+    /// the gap when quantity is below this.
+    var parQuantity: Int = 0
+
+    /// Household name that last changed the quantity, for the shared stash.
+    var lastChangedBy: String = ""
+
+    /// Short note such as "used the last one".
+    var lastChangeSummary: String = ""
+
     /// Free-form unit if relevant ("boxes", "packets", "pairs"). Nil = count of items.
     var unit: String?
 
@@ -136,6 +146,10 @@ final class StashItem {
     var nutritionFiberGrams: Double?
     var nutritionSodiumMilligrams: Double?
 
+    /// Ingredients printed on the package, in label order. Optional so
+    /// existing stores migrate without a value.
+    var ingredients: String? = nil
+
     /// Whether this item's nutrition has already been written to Apple
     /// Health. Persisted (not just view-local @State) so revisiting this
     /// item's detail screen doesn't invite writing a duplicate Health
@@ -178,7 +192,8 @@ final class StashItem {
         priceDetectedAutomatically: Bool = false,
         barcodePayload: String? = nil,
         barcodeLookupSource: String? = nil,
-        nutrition: NutritionFacts? = nil
+        nutrition: NutritionFacts? = nil,
+        ingredients: String? = nil
     ) {
         self.id = UUID()
         self.createdAt = .now
@@ -215,6 +230,8 @@ final class StashItem {
             self.nutritionFiberGrams = nutrition.fiberGrams >= 0 ? nutrition.fiberGrams : nil
             self.nutritionSodiumMilligrams = nutrition.sodiumMilligrams >= 0 ? nutrition.sodiumMilligrams : nil
         }
+        let trimmedIngredients = ingredients?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.ingredients = (trimmedIngredients?.isEmpty == false) ? trimmedIngredients : nil
     }
 }
 
@@ -319,7 +336,10 @@ extension StashItem {
 
     static func needingAttention(in items: [StashItem]) -> [StashItem] {
         items
-            .filter { $0.expiryStatus == .expiringSoon || $0.expiryStatus == .expired }
+            .filter { item in
+                item.quantity > 0
+                    && (item.expiryStatus == .expiringSoon || item.expiryStatus == .expired)
+            }
             .sorted { lhs, rhs in
                 (lhs.expiryDate ?? .distantFuture) < (rhs.expiryDate ?? .distantFuture)
             }
@@ -328,10 +348,18 @@ extension StashItem {
     /// Decrement by one unit. Quantity 0 stays as an empty row so widgets
     /// and the assistant can still refer to it; the user deletes explicitly.
     @MainActor
+    func noteChange(_ summary: String) {
+        let name = StashSettings.householdName
+        lastChangedBy = name
+        lastChangeSummary = summary
+        updatedAt = .now
+    }
+
+    @MainActor
     @discardableResult
     func consumeOneUnit(in context: ModelContext) -> Int {
         quantity = max(0, quantity - 1)
-        updatedAt = .now
+        noteChange(quantity == 0 ? "used the last one" : "used 1, \(quantity) left")
         try? context.save()
         return quantity
     }

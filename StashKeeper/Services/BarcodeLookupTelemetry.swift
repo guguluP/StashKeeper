@@ -20,7 +20,10 @@ import Foundation
 
 nonisolated enum BarcodeLookupOutcome: Codable, Equatable {
     case hit(source: String)
+    /// Both online databases and the local cache had no product for this code.
     case miss
+    /// A request failed, timed out, or was rate-limited, so this is not a confirmed gap.
+    case networkFailure
 }
 
 nonisolated struct BarcodeLookupEntry: Codable, Identifiable, Equatable {

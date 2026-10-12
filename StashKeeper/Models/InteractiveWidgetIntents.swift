@@ -18,6 +18,14 @@ extension Notification.Name {
     static let showExpiringItems = Notification.Name("showExpiringItems")
 }
 
+/// Set before a NotificationCenter post so a cold launch still opens the
+/// right screen when the post happens before RootView is listening.
+enum StashPendingRoute {
+    static var itemID: UUID?
+    static var showAddItem = false
+    static var showExpiring = false
+}
+
 struct OpenAddItemIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Item to Stash"
     static let description = IntentDescription("Opens the camera flow to catalog a new item.")
@@ -25,6 +33,7 @@ struct OpenAddItemIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
+        StashPendingRoute.showAddItem = true
         NotificationCenter.default.post(name: .requestNewItemFlow, object: nil)
         return .result()
     }
@@ -37,6 +46,7 @@ struct OpenExpiringListIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
+        StashPendingRoute.showExpiring = true
         NotificationCenter.default.post(name: .showExpiringItems, object: nil)
         return .result()
     }
@@ -64,6 +74,8 @@ struct ConsumeStashItemIntent: AppIntent {
             return .result(dialog: "That item is no longer in your stash.")
         }
         let remaining = item.consumeOneUnit(in: context)
+        await StashReminders.sync(item)
+        try? context.save()
         Self.reloadTimelines()
         if remaining == 0 {
             return .result(dialog: "Used the last \(item.name).")
@@ -100,6 +112,8 @@ struct SnoozeStashItemIntent: AppIntent {
             return .result(dialog: "That item is no longer in your stash.")
         }
         item.snoozeExpiry(days: 1, in: context)
+        await StashReminders.sync(item)
+        try? context.save()
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif

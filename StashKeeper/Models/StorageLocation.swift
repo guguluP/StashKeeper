@@ -45,10 +45,25 @@ final class StorageLocation {
     }
 
     /// Full breadcrumb path, e.g. "Garage > Top Shelf".
+    /// A hop limit keeps a parent cycle from recursing forever.
     var fullPath: String {
-        if let parent {
-            return "\(parent.fullPath) > \(name)"
+        path(hopsRemaining: 16)
+    }
+
+    /// True when walking parents reaches `ancestor`, including a cycle guard.
+    func isUnder(_ ancestor: StorageLocation) -> Bool {
+        var current = parent
+        var hops = 0
+        while let node = current, hops < 32 {
+            if node.id == ancestor.id { return true }
+            current = node.parent
+            hops += 1
         }
-        return name
+        return false
+    }
+
+    private func path(hopsRemaining: Int) -> String {
+        guard hopsRemaining > 0, let parent else { return name }
+        return "\(parent.path(hopsRemaining: hopsRemaining - 1)) > \(name)"
     }
 }

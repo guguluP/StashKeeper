@@ -28,6 +28,10 @@
 	<string>StashKeeper can log nutrition facts for food items you choose to send to Apple Health.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>StashKeeper puts your buy list in Reminders so Siri and other apps can see which groceries you need.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>StashKeeper puts your buy list in Reminders so Siri and other apps can see which groceries you need.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>StashKeeper sends reminders when perishable items are about to expire.</string>
 	<key>CFBundleURLTypes</key>

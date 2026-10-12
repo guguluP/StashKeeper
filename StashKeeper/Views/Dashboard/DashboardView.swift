@@ -20,6 +20,7 @@ struct DashboardView: View {
     @State private var recipeIdeas: [RecipeSuggestion] = []
     @State private var isLoadingRecipeIdeas = false
     @State private var showingReceiptScan = false
+    @State private var showingBarcodeAdd = false
     @Namespace private var heroNamespace
     @Environment(\.displayMetrics) private var metrics
 
@@ -72,6 +73,9 @@ struct DashboardView: View {
             withAnimation(.stashSpring(for: metrics)) {
                 hasAppeared = true
             }
+        }
+        .sheet(isPresented: $showingBarcodeAdd) {
+            BarcodeQuickAddView()
         }
         .sheet(isPresented: $showingAssistant) {
             StashAssistantChatView()
@@ -140,6 +144,9 @@ struct DashboardView: View {
         }
         quickActionTile(title: "Receipt", systemImage: "doc.text.viewfinder", tint: .purple) {
             showingReceiptScan = true
+        }
+        quickActionTile(title: "Barcode", systemImage: "barcode.viewfinder", tint: .green) {
+            showingBarcodeAdd = true
         }
     }
 

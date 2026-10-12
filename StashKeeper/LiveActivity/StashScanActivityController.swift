@@ -59,23 +59,26 @@ final class StashScanActivityController {
         #endif
     }
 
-    /// Pushes a progress update. `photoIndex` is 1-based (matching the
-    /// progress strings already used in AddItemFlowView's `.analyzing`
-    /// stage) so both surfaces read identically to the user.
-    func updateProgress(photoIndex: Int, totalPhotoCount: Int, message: String, itemsFoundSoFar: Int) {
+    /// Pushes a progress update and waits until ActivityKit accepts it,
+    /// so a one-photo scan does not stay at 0% until the very end.
+    func update(message: String, fraction: Double, itemsFoundSoFar: Int) async {
         #if os(iOS)
         guard let currentActivity else { return }
-        let fraction = totalPhotoCount > 0 ? Double(photoIndex) / Double(totalPhotoCount) : 0
         let state = StashScanActivityAttributes.ContentState(
             progressMessage: message,
             fractionComplete: min(max(fraction, 0), 1),
             itemsFoundSoFar: itemsFoundSoFar,
             isComplete: false
         )
-        Task {
-            await currentActivity.update(.init(state: state, staleDate: nil))
-        }
+        await currentActivity.update(.init(state: state, staleDate: nil))
         #endif
+    }
+
+    /// Fraction through a multi-photo scan. `stage` is 0...1 within the current photo.
+    nonisolated static func scanFraction(photoIndex: Int, total: Int, stage: Double) -> Double {
+        guard total > 0 else { return stage }
+        let slot = 1.0 / Double(total)
+        return min(0.97, (Double(photoIndex) + min(max(stage, 0), 1)) * slot)
     }
 
     /// Marks the activity complete with a final item count, then ends it

@@ -25,7 +25,7 @@ struct ExpiringItemSummary: Identifiable {
 
 enum ExpiringItemsLoader {
     static func fetch() -> (items: [ExpiringItemSummary], insight: String) {
-        let container = SharedModelConfiguration.makeContainer()
+        let container = ModelContainerProvider.shared
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<StashItem>()
         guard let items = try? context.fetch(descriptor) else {

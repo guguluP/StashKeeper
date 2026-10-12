@@ -46,7 +46,6 @@ struct RootView: View {
     @State private var showingAddItem = false
     @State private var routedItemID: UUID?
 
-    @Environment(\.modelContext) private var modelContext
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
@@ -65,6 +64,7 @@ struct RootView: View {
             #endif
         }
         .displayAdaptive()
+        .task { drainPendingRoute() }
     }
 
     // MARK: - iPhone layout (compact width)
@@ -109,18 +109,18 @@ struct RootView: View {
             .sheetPopIn()
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
+            StashPendingRoute.showAddItem = false
             showingAddItem = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .stashItemNotificationAction)) { notification in
-            handleNotificationAction(notification)
         }
         .onOpenURL(perform: handleOpenURL)
         .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
+            StashPendingRoute.itemID = nil
             if let id = notification.userInfo?["itemID"] as? UUID {
                 routedItemID = id
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
+            StashPendingRoute.showExpiring = false
             selectedSection = .shopping
         }
     }
@@ -201,18 +201,18 @@ struct RootView: View {
             .sheetPopIn()
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
+            StashPendingRoute.showAddItem = false
             showingAddItem = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .stashItemNotificationAction)) { notification in
-            handleNotificationAction(notification)
         }
         .onOpenURL(perform: handleOpenURL)
         .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
+            StashPendingRoute.itemID = nil
             if let id = notification.userInfo?["itemID"] as? UUID {
                 routedItemID = id
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
+            StashPendingRoute.showExpiring = false
             selectedSection = .shopping
         }
     }
@@ -269,25 +269,19 @@ struct RootView: View {
         }
     }
 
-    private func handleNotificationAction(_ notification: Notification) {
-        guard let itemID = notification.userInfo?["itemID"] as? UUID,
-              let actionID = notification.userInfo?["actionID"] as? String,
-              let item = allItems.first(where: { $0.id == itemID }) else { return }
-
-        switch actionID {
-        case NotificationManager.markUsedActionID:
-            // Full cleanup: photos + notifications + model row.
-            StashItemLifecycle.delete(item, from: modelContext)
-        case NotificationManager.snoozeActionID:
-            if let newDate = Calendar.current.date(byAdding: .day, value: 1, to: item.expiryDate ?? .now) {
-                item.expiryDate = newDate
-                item.expiryUserConfirmed = true
-                Task { await ExpiryEngine.shared.syncNotifications(for: item) }
-            }
-        default:
-            // User tapped the notification body itself (not an action
-            // button) — route them directly to that item.
-            routedItemID = itemID
+    /// Reads a route stashed by an intent or a notification before this view existed.
+    private func drainPendingRoute() {
+        if StashPendingRoute.showAddItem {
+            StashPendingRoute.showAddItem = false
+            showingAddItem = true
+        }
+        if StashPendingRoute.showExpiring {
+            StashPendingRoute.showExpiring = false
+            selectedSection = .shopping
+        }
+        if let id = StashPendingRoute.itemID {
+            StashPendingRoute.itemID = nil
+            routedItemID = id
         }
     }
 }

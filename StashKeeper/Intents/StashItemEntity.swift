@@ -137,6 +137,7 @@ struct OpenStashItemIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
+        StashPendingRoute.itemID = item.id
         NotificationCenter.default.post(
             name: .openStashItem,
             object: nil,

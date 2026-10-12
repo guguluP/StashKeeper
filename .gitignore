@@ -17,3 +17,6 @@ DerivedData/
 
 # Nested repo export that was committed by mistake
 StashKeeper_repo.bundle
+
+# Create ML training photos. The exported model is what ships.
+MLTraining/

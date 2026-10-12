@@ -48,7 +48,7 @@ struct ItemDetailView: View {
                     Button {
                         StashHaptics.alignment()
                         _ = item.consumeOneUnit(in: modelContext)
-                        reloadWidgets()
+                        Task { await StashItemLifecycle.afterEdit(item, in: modelContext) }
                     } label: {
                         Label("Used 1", systemImage: "minus.circle.fill")
                             .frame(maxWidth: .infinity)
@@ -61,8 +61,7 @@ struct ItemDetailView: View {
                         Button {
                             StashHaptics.alignment()
                             item.snoozeExpiry(days: 1, in: modelContext)
-                            Task { await ExpiryEngine.shared.syncNotifications(for: item) }
-                            reloadWidgets()
+                            Task { await StashItemLifecycle.afterEdit(item, in: modelContext) }
                         } label: {
                             Label("Tomorrow", systemImage: "clock")
                                 .frame(maxWidth: .infinity)
@@ -85,7 +84,27 @@ struct ItemDetailView: View {
                     get: { item.subcategory ?? "" },
                     set: { item.subcategory = $0.isEmpty ? nil : $0 }
                 ))
-                Stepper("Quantity: \(item.quantity)", value: $item.quantity, in: 1...999)
+                Stepper("Quantity: \(item.quantity)", value: $item.quantity, in: 0...999)
+                Stepper("Keep at least: \(item.parQuantity)", value: $item.parQuantity, in: 0...999)
+                if item.parQuantity > item.quantity {
+                    Text("Buy \(item.parQuantity - item.quantity) more to reach the amount you keep.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if !item.lastChangeSummary.isEmpty {
+                    Text("\(item.lastChangedBy.isEmpty ? "Someone" : item.lastChangedBy) \(item.lastChangeSummary)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                TextField("Unit", text: Binding(
+                    get: { item.unit ?? "" },
+                    set: { item.unit = $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+                ), prompt: Text("packets, kg, boxes"))
+                if item.quantity == 0 {
+                    Text("Nothing left. Delete the item when you are done with it.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Location") {
@@ -190,6 +209,13 @@ struct ItemDetailView: View {
                 }
             }
 
+            if let ingredients = item.ingredients, !ingredients.isEmpty {
+                Section("Ingredients") {
+                    Text(ingredients)
+                        .font(.subheadline)
+                }
+            }
+
             if item.hasNutrition {
                 Section("Nutrition" + (item.nutritionServingSize.map { " (per \($0))" } ?? "")) {
                     if let calories = item.nutritionCalories {
@@ -221,22 +247,14 @@ struct ItemDetailView: View {
                             try? await HealthKitService.shared.requestAuthorizationIfNeeded()
                             let synced = await HealthKitService.shared.logNutrition(for: item)
                             if synced { StashHaptics.success() }
-                            withAnimation(.stashSpring) { item.healthKitSynced = synced }
                         }
                     } label: {
-                        Label(
-                            item.healthKitSynced ? "Logged to Health" : "Log nutrition to Health",
-                            systemImage: item.healthKitSynced ? "checkmark.circle.fill" : "heart.text.square"
-                        )
+                        Label("Log one serving to Health", systemImage: "heart.text.square")
                     }
-                    .foregroundStyle(item.healthKitSynced ? .green : .accentColor)
-                    .disabled(item.healthKitSynced)
 
-                    if !item.healthKitSynced {
-                        Text("Health only tracks food you consume. Use this when you've eaten this item (or accept logging storage as an estimate).")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Each tap records one serving as food you ate.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                     #endif
                 }
             }
@@ -287,6 +305,9 @@ struct ItemDetailView: View {
         }
         .onChange(of: item.isPerishable) { _, _ in Task { await resync() } }
         .onChange(of: item.expiryDate) { _, _ in Task { await resync() } }
+        .onChange(of: item.quantity) { _, _ in Task { await resync() } }
+        .onChange(of: item.parQuantity) { _, _ in Task { await GroceryList.publish() } }
+        .onChange(of: item.location?.id) { _, _ in Task { await resync() } }
         .onDisappear {
             try? modelContext.save()
             Task { await SpotlightIndexer.index(item: item) }
@@ -304,7 +325,7 @@ struct ItemDetailView: View {
     }
 
     private func resync() async {
-        await ExpiryEngine.shared.syncNotifications(for: item)
+        await StashItemLifecycle.afterEdit(item, in: modelContext)
     }
 
     private func nutritionRow(_ label: String, _ value: String) -> some View {

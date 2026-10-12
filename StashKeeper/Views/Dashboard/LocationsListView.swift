@@ -27,7 +27,7 @@ struct LocationsListView: View {
                             .frame(width: 28)
                         VStack(alignment: .leading) {
                             Text(location.name)
-                            Text("\(location.items.count) item\(location.items.count == 1 ? "" : "s")")
+                            Text(locationCaption(location))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -68,6 +68,14 @@ struct LocationsListView: View {
         }
     }
 
+    private func locationCaption(_ location: StorageLocation) -> String {
+        let count = "\(location.items.count) item\(location.items.count == 1 ? "" : "s")"
+        if let parent = location.parent {
+            return "In \(parent.name) · \(count)"
+        }
+        return count
+    }
+
     private func deleteLocations(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(locations[index])
@@ -87,10 +95,20 @@ struct LocationsListView: View {
 
 struct LocationDetailView: View {
     @Bindable var location: StorageLocation
+    @Query(sort: \StorageLocation.sortIndex) private var allLocations: [StorageLocation]
     @Namespace private var heroNamespace
 
     var body: some View {
         List {
+            Section("Place") {
+                TextField("Name", text: $location.name)
+                Picker("Inside", selection: parentBinding) {
+                    Text("None").tag(Optional<UUID>.none)
+                    ForEach(parentChoices) { candidate in
+                        Text(candidate.fullPath).tag(Optional(candidate.id))
+                    }
+                }
+            }
             ForEach(location.items) { item in
                 NavigationLink {
                     ItemDetailView(item: item, heroNamespace: heroNamespace)
@@ -104,6 +122,11 @@ struct LocationDetailView: View {
             }
         }
         .navigationTitle(location.name)
+        .onChange(of: location.name) { old, new in
+            if new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                location.name = old.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : old
+            }
+        }
         .overlay {
             if location.items.isEmpty {
                 ContentUnavailableView(
@@ -112,6 +135,21 @@ struct LocationDetailView: View {
                 )
             }
         }
+    }
+
+    private var parentChoices: [StorageLocation] {
+        allLocations.filter { candidate in
+            candidate.id != location.id && !candidate.isUnder(location)
+        }
+    }
+
+    private var parentBinding: Binding<UUID?> {
+        Binding(
+            get: { location.parent?.id },
+            set: { newID in
+                location.parent = allLocations.first { $0.id == newID }
+            }
+        )
     }
 }
 

@@ -82,7 +82,12 @@ enum HeuristicItemNamer {
     /// with nothing.
     static func analyze(_ region: RegionAnalysisInput) -> ItemAnalysis {
         let (name, confidence) = deriveName(from: region)
-        let category = deriveCategory(from: region.classificationLabels)
+        let category: String
+        if let named = region.lookedUpProduct?.category, !named.isEmpty {
+            category = named
+        } else {
+            category = deriveCategory(from: region.classificationLabels)
+        }
         let (priceAmount, priceCurrency) = derivePrice(from: region.priceHints)
 
         return ItemAnalysis(
@@ -135,7 +140,7 @@ enum HeuristicItemNamer {
         (["banana", "apple", "fruit", "vegetable", "produce", "tomato", "onion", "potato", "carrot", "mango", "berry"], "Fresh Produce"),
         (["milk", "cheese", "yogurt", "yoghurt", "dairy", "paneer", "curd", "dahi", "ghee", "butter", "egg"], "Dairy"),
         (["bottle", "can", "beverage", "drink", "soda", "juice", "water", "coffee", "tea"], "Beverages"),
-        (["bread", "rice", "pasta", "cereal", "snack", "cookie", "biscuit", "flour", "spice", "oil", "sauce", "food", "grocery", "pantry"], "Pantry & Food"),
+        (["bread", "rice", "pasta", "cereal", "snack", "cookie", "biscuit", "flour", "spice", "oil", "sauce", "food", "grocery", "pantry", "chocolate", "cocoa", "candy", "wafer", "confection"], "Pantry & Food"),
         (["medicine", "pill", "tablet", "capsule", "pharmaceutical", "vitamin", "syrup", "bandage"], "Medicine & Health"),
         (["cosmetic", "shampoo", "soap", "lotion", "toothpaste", "toiletry", "perfume"], "Cosmetics & Toiletries"),
         (["electronics", "cable", "charger", "phone", "battery", "device", "laptop", "headphones"], "Electronics"),
@@ -715,13 +720,19 @@ final class ItemIntelligenceService {
             }
             if let barcode = region.barcodePayload {
                 lines.append("- Barcode detected: \(barcode)")
+                if let note = PackageLabelReader.originNote(for: barcode) {
+                    lines.append("- \(note)")
+                }
             }
             if let product = region.lookedUpProduct {
-                lines.append("- Online product database match (\(product.source)): name '\(product.name)'" +
+                let kind = product.source == PackageLabelReader.packageSource
+                    ? "On-device read of the printed package (no product database had this barcode)"
+                    : "Online product database match (\(product.source))"
+                lines.append("- \(kind): name '\(product.name)'" +
                     (product.brand.map { ", brand '\($0)'" } ?? "") +
                     (product.category.map { ", category '\($0)'" } ?? "") +
                     (product.rawNutritionText.map { ", nutrition data: \($0)" } ?? "") +
-                    ". Treat this as strong grounding evidence for identifying the product, but still use your judgment and the other cues.")
+                    ". Treat this as strong grounding evidence for identifying the product, but still use your judgment and the other cues. If this was read from the package, keep the printed brand and product name.")
             }
             return lines.joined(separator: "\n")
         }.joined(separator: "\n\n")
@@ -898,11 +909,18 @@ final class ItemIntelligenceService {
               labels (a stale or mismatched barcode lookup should be
               treated with lower confidence).
             - Indian grocery products: recognize common Indian packaged
-              food/dairy brands and product naming conventions (e.g. Amul,
-              Mother Dairy, Britannia, Haldiram's, Patanjali), regional
-              produce names, and typical Indian pack sizes/units. Dairy
-              products like milk, curd/dahi, paneer, and ghee are common
-              and perishable with short shelf lives unless UHT/ghee.
+              food, chocolate, and dairy brands and product naming
+              conventions (e.g. Amul, Cadbury, Dairy Milk, Nestlé, Britannia,
+              Parle, Haldiram's, Mother Dairy), regional produce names, and
+              typical Indian pack sizes/units. A barcode that starts with
+              890 is an Indian GS1 code. Those products are often missing
+              from Open Food Facts, including ordinary chocolate bars. When
+              the database has no match, or the note says the name was read
+              from the package, the large words on the wrapper are the
+              product name. Do not replace a printed name such as
+              "Cadbury Dairy Milk Silk" with a generic "Chocolate".
+            - Dairy products like milk, curd/dahi, paneer, and ghee are
+              common and perishable with short shelf lives unless UHT/ghee.
             - Reading product names from OCR text: prefer the largest,
               highest-confidence line of text as the product's name/brand,
               since packaging design puts the brand and product name in the
@@ -1010,6 +1028,14 @@ final class ItemIntelligenceService {
             Day Cashew Cookies", category: "Pantry & Food", subcategory:
             "Cookies", categoryConfidence: 0.85+. Don't override it with a
             vaguer name just because OCR alone would've been weaker.
+
+            Example 4b — Indian barcode, no database row:
+            Barcode 8901234567890, note says GS1 890 and that the name was
+            read from the package: "Cadbury Dairy Milk". OCR large text:
+            "Cadbury", "Dairy Milk", "Silk". Classification: "chocolate".
+            → name: "Cadbury Dairy Milk Silk", category: "Pantry & Food",
+            subcategory: "Chocolate". The wrapper outranks the generic
+            classification. Do not answer "Unknown" or only "Chocolate".
 
             Example 5 — price-shaped text with a decoy number present:
             Price-shaped candidates for this region: "MRP Rs.149" (has

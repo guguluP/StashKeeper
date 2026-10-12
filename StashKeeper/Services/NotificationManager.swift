@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import SwiftData
 import UserNotifications
 
 @MainActor
@@ -16,11 +17,11 @@ final class NotificationManager: NSObject {
 
     static let shared = NotificationManager()
 
-    static let expiringCategoryID = "ITEM_EXPIRING_SOON"
-    static let expiredCategoryID = "ITEM_EXPIRED"
+    static let expiringCategoryID = StashReminders.expiringCategoryID
+    static let expiredCategoryID = StashReminders.expiredCategoryID
 
-    static let markUsedActionID = "MARK_USED"
-    static let snoozeActionID = "SNOOZE_ONE_DAY"
+    static let markUsedActionID = StashReminders.markUsedActionID
+    static let snoozeActionID = StashReminders.snoozeActionID
 
     private let center = UNUserNotificationCenter.current()
 
@@ -64,67 +65,38 @@ final class NotificationManager: NSObject {
         center.setNotificationCategories([expiringCategory, expiredCategory])
     }
 
-    /// Schedules a heads-up reminder ahead of expiry. Returns the notification ID if scheduled.
-    func scheduleExpiryWarning(for item: StashItem, fireDate: Date) async -> String? {
-        let content = UNMutableNotificationContent()
-        content.title = "Expiring Soon"
-        content.body = expiryWarningBody(for: item)
-        content.sound = .default
-        content.categoryIdentifier = Self.expiringCategoryID
-        content.interruptionLevel = .active
-        content.userInfo = ["itemID": item.id.uuidString]
-        if let firstPhoto = item.photoFilenames.first {
-            content.userInfo["photoFilename"] = firstPhoto
-        }
-
-        return await schedule(content: content, fireDate: fireDate)
-    }
-
-    /// Schedules the day-of "this has expired" notice.
-    func scheduleExpiredNotice(for item: StashItem, fireDate: Date) async -> String? {
-        let content = UNMutableNotificationContent()
-        content.title = "Item Expired"
-        content.body = "\(item.name) at \(item.location?.name ?? "your stash") has expired."
-        content.sound = .default
-        content.categoryIdentifier = Self.expiredCategoryID
-        // Expired items are more time-critical than an advance warning.
-        content.interruptionLevel = .timeSensitive
-        content.userInfo = ["itemID": item.id.uuidString]
-
-        return await schedule(content: content, fireDate: fireDate)
-    }
-
-    private func schedule(content: UNMutableNotificationContent, fireDate: Date) async -> String? {
-        let comps = Calendar.current.dateComponents(
-            [.year, .month, .day, .hour, .minute],
-            from: fireDate
-        )
-        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
-        let id = UUID().uuidString
-        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-
-        do {
-            try await center.add(request)
-            return id
-        } catch {
-            return nil
-        }
-    }
-
     func cancelNotifications(ids: [String]) async {
-        guard !ids.isEmpty else { return }
-        center.removePendingNotificationRequests(withIdentifiers: ids)
+        await StashReminders.cancel(ids: ids)
     }
 
-    private func expiryWarningBody(for item: StashItem) -> String {
-        let days = item.daysUntilExpiry ?? 0
-        let where_ = item.location?.name ?? "your stash"
-        if days <= 0 {
-            return "\(item.name) at \(where_) expires today."
-        } else if days == 1 {
-            return "\(item.name) at \(where_) expires tomorrow."
-        } else {
-            return "\(item.name) at \(where_) expires in \(days) days."
+    /// Applies a notification action to the store directly. Posting only
+    /// through NotificationCenter drops the action when the app is launched
+    /// from a killed state and the view is not listening yet.
+    @MainActor
+    static func applyAction(actionID: String, itemID: UUID) {
+        if actionID == UNNotificationDefaultActionIdentifier {
+            StashPendingRoute.itemID = itemID
+            NotificationCenter.default.post(
+                name: .openStashItem,
+                object: nil,
+                userInfo: ["itemID": itemID]
+            )
+            return
+        }
+
+        let context = ModelContainerProvider.shared.mainContext
+        let items = (try? context.fetch(FetchDescriptor<StashItem>())) ?? []
+        guard let item = items.first(where: { $0.id == itemID }) else { return }
+
+        switch actionID {
+        case markUsedActionID:
+            _ = item.consumeOneUnit(in: context)
+            Task { await StashItemLifecycle.afterEdit(item, in: context) }
+        case snoozeActionID:
+            item.snoozeExpiry(days: 1, in: context)
+            Task { await StashItemLifecycle.afterEdit(item, in: context) }
+        default:
+            break
         }
     }
 }
@@ -152,14 +124,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
               let itemID = UUID(uuidString: itemIDString) else { return }
 
         await MainActor.run {
-            NotificationCenter.default.post(
-                name: .stashItemNotificationAction,
-                object: nil,
-                userInfo: [
-                    "itemID": itemID,
-                    "actionID": actionID
-                ]
-            )
+            NotificationManager.applyAction(actionID: actionID, itemID: itemID)
         }
     }
 }

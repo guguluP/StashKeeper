@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Query private var items: [StashItem]
     @Query private var locations: [StorageLocation]
     @State private var warningWindowDays = StashSettings.currentWarningWindowDays
+    @State private var shareGroceries = StashSettings.shareGroceriesWithReminders
     @State private var exportDocument = JSONFile(data: Data())
     @State private var showingExporter = false
     @State private var showingImporter = false
@@ -29,6 +30,33 @@ struct SettingsView: View {
                     Text("Reminders, backup, and how soon we warn you before food goes off.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+            }
+            Section("Household") {
+                TextField("Your name", text: Binding(
+                    get: { StashSettings.householdName == "Me" ? "" : StashSettings.householdName },
+                    set: { StashSettings.householdName = $0.isEmpty ? "Me" : $0 }
+                ), prompt: Text("Me"))
+                Text("This name is stored on each quantity change, so another device on this iCloud account can see who used an item.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Toggle("Show the buy list in Reminders", isOn: $shareGroceries)
+                Text("Siri can ask what groceries you need. When this is on, the same list is a Reminders list named StashKeeper Groceries, so Reminders and other apps can use it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .onChange(of: shareGroceries) { _, enabled in
+                Task {
+                    if enabled {
+                        let granted = await GroceryRemindersSync.shared.requestAccessAndSync()
+                        if !granted {
+                            shareGroceries = false
+                            StashSettings.shareGroceriesWithReminders = false
+                            statusMessage = "Reminders access is off, so other apps cannot see the buy list yet."
+                        }
+                    } else {
+                        StashSettings.shareGroceriesWithReminders = false
+                    }
                 }
             }
             Section("Expiry reminders") {
@@ -76,6 +104,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .onChange(of: warningWindowDays) { _, newValue in
             StashSettings.warningWindowDays = newValue
+            Task { await resyncReminders() }
         }
         .task {
             await refreshNotificationStatus()
@@ -96,16 +125,13 @@ struct SettingsView: View {
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.json]) { result in
             switch result {
             case .success(let url):
-                guard url.startAccessingSecurityScopedResource() else {
-                    statusMessage = "Couldn't read the selected file."
-                    return
-                }
-                defer { url.stopAccessingSecurityScopedResource() }
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
                 do {
                     let data = try Data(contentsOf: url)
-                    let count = try InventoryExport.importBackup(data, into: modelContext)
-                    statusMessage = "Imported \(count) new item\(count == 1 ? "" : "s")."
-                    reloadWidgets()
+                    let result = try InventoryExport.importBackup(data, into: modelContext)
+                    statusMessage = importStatus(result)
+                    Task { await resyncReminders() }
                 } catch {
                     statusMessage = "Import failed: \(error.localizedDescription)"
                 }
@@ -115,21 +141,40 @@ struct SettingsView: View {
         }
     }
 
+    private func importStatus(_ result: InventoryImportResult) -> String {
+        "Added \(result.inserted) new item\(result.inserted == 1 ? "" : "s"), updated \(result.updated)."
+    }
+
+    private func resyncReminders() async {
+        let fetched = (try? modelContext.fetch(FetchDescriptor<StashItem>())) ?? items
+        await ExpiryEngine.shared.resyncAll(items: fetched)
+        try? modelContext.save()
+        reloadWidgets()
+    }
+
     @ViewBuilder
     private var barcodeLookupSection: some View {
-        let misses = lookupEntries.filter { $0.outcome == .miss }
-        let hits = lookupEntries.count - misses.count
+        let notFound = lookupEntries.filter { $0.outcome == .miss }
+        let networkFailures = lookupEntries.filter { $0.outcome == .networkFailure }
+        let hits = lookupEntries.filter {
+            if case .hit = $0.outcome { return true }
+            return false
+        }
         Section("Barcode lookup") {
             if lookupEntries.isEmpty {
-                Text("No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases.")
+                Text("No scans recorded yet. Each barcode lookup is kept on this device so you can see whether a miss is a real gap or a failed request.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
                 LabeledContent("Recorded lookups", value: "\(lookupEntries.count)")
-                LabeledContent("Hits", value: "\(hits)")
-                LabeledContent("Misses", value: "\(misses.count)")
-                LabeledContent("Miss rate", value: missRateLabel(misses: misses.count, total: lookupEntries.count))
-                let missedBarcodes = uniqueMissedBarcodes(from: misses)
+                LabeledContent("Hits", value: "\(hits.count)")
+                LabeledContent("Not in a database", value: "\(notFound.count)")
+                LabeledContent("Couldn't reach a database", value: "\(networkFailures.count)")
+                LabeledContent(
+                    "Miss rate",
+                    value: missRateLabel(misses: notFound.count, total: hits.count + notFound.count)
+                )
+                let missedBarcodes = uniqueMissedBarcodes(from: notFound)
                 if !missedBarcodes.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Barcodes with no match")
@@ -151,6 +196,9 @@ struct SettingsView: View {
                 }
             }
             .disabled(lookupEntries.isEmpty)
+            Text("Nutrition and ingredients are read on device from the printed label.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

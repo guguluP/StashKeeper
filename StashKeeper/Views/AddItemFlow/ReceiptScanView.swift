@@ -3,18 +3,13 @@
 //  StashKeeper
 //
 //  Entry point for "scan a receipt": capture a photo of a bill, extract
-//  its line items via ReceiptScanService, and present them as a checklist
-//  the user works through one item at a time. Each checklist row launches
-//  the existing AddItemFlowView (in receipt-hint mode) to photograph the
-//  actual physical item — this view never adds a StashItem on its own,
-//  since a receipt line by itself is just a name and a price, not enough
-//  to catalog an item the way the rest of this app does (no photo,
-//  category confidence, or expiry estimate). The checklist exists to make
-//  working through a big shopping trip's items fast and hard to lose
-//  track of, not to skip photographing them.
+//  its line items via ReceiptScanService. A line with a name is saved
+//  straight into the stash. The camera is only for a line the receipt
+//  could not name.
 //
 
 import SwiftUI
+import SwiftData
 import PhotosUI
 
 struct ReceiptScanView: View {
@@ -27,6 +22,7 @@ struct ReceiptScanView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @State private var stage: Stage = .capture
     @State private var extraction: ReceiptExtraction?
@@ -108,7 +104,7 @@ struct ReceiptScanView: View {
                 .foregroundStyle(.blue)
             Text("Photograph your receipt")
                 .font(.title2.weight(.semibold))
-            Text("Lay the bill flat and capture the whole thing in good light. Apple Intelligence will pull out each purchased item so you can catalog them one by one.")
+            Text("Lay the bill flat and capture the whole thing in good light. Named lines are added to your stash. Photograph a line only when the receipt could not name it.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -195,6 +191,8 @@ struct ReceiptScanView: View {
                         }
                     } header: {
                         Text("\(confirmedIndices.count) of \(extraction.items.count) cataloged")
+                    } footer: {
+                        Button("Add every named line") { saveAllNamedLines() }
                     }
                 }
             } else {
@@ -209,32 +207,74 @@ struct ReceiptScanView: View {
 
     private func checklistRow(item: ReceiptLineItem, index: Int) -> some View {
         let isConfirmed = confirmedIndices.contains(index)
-        return Button {
-            StashHaptics.impact()
-            activeItemIndex = index
-        } label: {
-            HStack {
-                Image(systemName: isConfirmed ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isConfirmed ? .green : .secondary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(.subheadline)
-                        .strikethrough(isConfirmed)
-                        .foregroundStyle(isConfirmed ? .secondary : .primary)
-                    if let price = item.price {
-                        Text("Qty \(item.quantity) · \(price, format: .number.precision(.fractionLength(2)))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+        let named = !item.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return HStack {
+            Button {
+                guard !isConfirmed else { return }
+                if named {
+                    saveLine(item, index: index)
+                } else {
+                    activeItemIndex = index
+                }
+            } label: {
+                HStack {
+                    Image(systemName: isConfirmed ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(isConfirmed ? .green : .secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(named ? item.name : "Unnamed line")
+                            .font(.subheadline)
+                            .strikethrough(isConfirmed)
+                            .foregroundStyle(isConfirmed ? .secondary : .primary)
+                        if let price = item.price {
+                            Text("Qty \(item.quantity) · \(price, format: .number.precision(.fractionLength(2)))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
-                Spacer()
-                Image(systemName: "camera")
-                    .foregroundStyle(.blue)
-                    .accessibilityHidden(true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isConfirmed ? "\(item.name), already cataloged" : named ? "Add \(item.name)" : "Photograph unnamed line")
+            Spacer()
+            if !named {
+                Button {
+                    activeItemIndex = index
+                } label: {
+                    Image(systemName: "camera")
+                }
+                .accessibilityLabel("Photograph this line")
             }
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isConfirmed ? "\(item.name), already cataloged" : "Catalog \(item.name)")
+    }
+
+    private func saveAllNamedLines() {
+        guard let extraction else { return }
+        for (index, item) in extraction.items.enumerated() where !confirmedIndices.contains(index) {
+            saveLine(item, index: index)
+        }
+    }
+
+    private func saveLine(_ item: ReceiptLineItem, index: Int) {
+        let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            activeItemIndex = index
+            return
+        }
+        let currency = extraction?.currency.isEmpty == false ? extraction?.currency : "INR"
+        let stash = StashItem(
+            name: trimmed,
+            category: item.category.isEmpty ? "Other" : item.category,
+            quantity: max(1, item.quantity),
+            priceAmount: item.price,
+            priceCurrency: currency,
+            priceDetectedAutomatically: item.price != nil
+        )
+        stash.noteChange("added from a receipt")
+        modelContext.insert(stash)
+        try? modelContext.save()
+        confirmedIndices.insert(index)
+        reloadWidgets()
+        StashHaptics.success()
     }
 
     private var activeItemBinding: Binding<AddItemFlowView.ReceiptItemPrefill?> {

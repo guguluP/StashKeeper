@@ -22,6 +22,26 @@ enum StashSettings {
 
     nonisolated static var currentWarningWindowDays: Int { warningWindowDays }
 
+    nonisolated static let householdNameKey = "stashkeeper.householdName"
+    nonisolated static let shareGroceriesKey = "stashkeeper.shareGroceriesWithReminders"
+
+    /// When true, the buy list is copied into a Reminders list named StashKeeper Groceries.
+    nonisolated static var shareGroceriesWithReminders: Bool {
+        get { defaults.bool(forKey: shareGroceriesKey) }
+        set { defaults.set(newValue, forKey: shareGroceriesKey) }
+    }
+
+    /// Name recorded on quantity changes so another device can see who used an item.
+    nonisolated static var householdName: String {
+        get {
+            let stored = defaults.string(forKey: householdNameKey)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return stored.isEmpty ? "Me" : stored
+        }
+        set {
+            defaults.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: householdNameKey)
+        }
+    }
+
     nonisolated static func clamp(_ value: Int) -> Int {
         allowedWarningWindowDays.contains(value) ? value : defaultWarningWindowDays
     }

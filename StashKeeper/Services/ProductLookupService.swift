@@ -8,9 +8,10 @@
 //  fallback. This is the app's only network dependency, and it's used only
 //  for barcode resolution — never for general item photos.
 //
-//  Primary: Open Food Facts (food/grocery focused, strong Indian product
-//  coverage from community contributions, fully free, no API key).
-//  Fallback: UPCitemdb's free tier (broader non-food product coverage).
+//  Food, beauty, household, and pet catalogs are all queried. Indian
+//  barcodes (890…) are often missing from any one of them, so a miss in
+//  Open Food Facts is not the end of the lookup. The scanned value is
+//  reduced to a GTIN first, including GS1 Digital Link QR codes.
 //
 
 import Foundation
@@ -43,82 +44,136 @@ actor ProductLookupService {
         var request = URLRequest(url: url)
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         request.setValue(
-            "StashKeeper/\(version) (https://github.com/piyushpatnaik/StashKeeper; inventory-barcode-lookup)",
+            "StashKeeper/\(version) (https://github.com/guguluP/StashKeeper; inventory-barcode-lookup)",
             forHTTPHeaderField: "User-Agent"
         )
         return request
     }
 
-    /// Looks up a product by barcode, trying Open Food Facts first (best
-    /// for groceries, produce, dairy — including Indian regional products),
-    /// then UPCitemdb for general merchandise, then a local Indian FMCG
-    /// fallback cache (seed table + anything learned from past user
-    /// confirmations on this device) for regional/local brands neither
-    /// online database tends to carry. Records a local, on-device-only
-    /// telemetry entry for every attempt so lookup gaps can be diagnosed
-    /// from real usage instead of guesswork.
+    private static let openFactsCatalogs: [(source: String, host: String)] = [
+        ("Open Food Facts", "world.openfoodfacts.org"),
+        ("Open Beauty Facts", "world.openbeautyfacts.org"),
+        ("Open Products Facts", "world.openproductsfacts.org"),
+        ("Open Pet Food Facts", "world.openpetfoodfacts.org"),
+    ]
+
+    /// Looks the barcode up as a GTIN. A 404 from one catalog is "not in
+    /// that catalog", so the next catalog still runs. A transport or server
+    /// error is recorded separately and does not hide a later hit.
     func lookup(barcode: String) async -> LookedUpProduct? {
-        if let product = try? await lookupOpenFoodFacts(barcode: barcode) {
-            await BarcodeLookupTelemetry.shared.record(barcode: barcode, outcome: .hit(source: product.source))
-            return product
-        }
-        if let product = try? await lookupUPCItemDB(barcode: barcode) {
-            await BarcodeLookupTelemetry.shared.record(barcode: barcode, outcome: .hit(source: product.source))
-            return product
-        }
-        if let product = await IndianFMCGBarcodeCache.shared.lookup(barcode: barcode) {
-            await BarcodeLookupTelemetry.shared.record(barcode: barcode, outcome: .hit(source: product.source))
-            return product
-        }
-        await BarcodeLookupTelemetry.shared.record(barcode: barcode, outcome: .miss)
-        return nil
-    }
+        let codes = BarcodeCodes.candidates(from: barcode)
+        guard !codes.isEmpty else { return nil }
 
-    // MARK: - Open Food Facts
+        var sawNetworkFailure = false
+        for code in codes {
+            switch await firstOpenFactsHit(code: code) {
+            case .found(let product):
+                await BarcodeLookupTelemetry.shared.record(barcode: code, outcome: .hit(source: product.source))
+                return product
+            case .missing:
+                break
+            case .failed:
+                sawNetworkFailure = true
+            }
 
-    private func lookupOpenFoodFacts(barcode: String) async throws -> LookedUpProduct {
-        guard let url = URL(string: "https://world.openfoodfacts.org/api/v2/product/\(barcode).json") else {
-            throw ProductLookupError.notFound
-        }
-
-        let (data, response) = try await session.data(for: Self.identifiedRequest(url: url))
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw ProductLookupError.networkUnavailable
-        }
-
-        let decoded = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
-        guard decoded.status == 1, let product = decoded.product else {
-            throw ProductLookupError.notFound
-        }
-
-        let name = product.productNameEn ?? product.productName ?? product.genericName
-        guard let name, !name.isEmpty else { throw ProductLookupError.notFound }
-
-        var nutritionParts: [String] = []
-        if let n = product.nutriments {
-            if let cal = n.energyKcal100g { nutritionParts.append("Energy: \(cal) kcal/100g") }
-            if let protein = n.proteins100g { nutritionParts.append("Protein: \(protein)g/100g") }
-            if let carbs = n.carbohydrates100g { nutritionParts.append("Carbohydrates: \(carbs)g/100g") }
-            if let sugar = n.sugars100g { nutritionParts.append("Sugars: \(sugar)g/100g") }
-            if let fat = n.fat100g { nutritionParts.append("Fat: \(fat)g/100g") }
-            if let satFat = n.saturatedFat100g { nutritionParts.append("Saturated Fat: \(satFat)g/100g") }
-            if let fiber = n.fiber100g { nutritionParts.append("Fiber: \(fiber)g/100g") }
-            // Open Food Facts `sodium_100g` is grams; StashKeeper / AFM prompts
-            // expect milligrams for NutritionFacts.sodiumMilligrams.
-            if let sodium = n.sodium100g {
-                let milligrams = sodium * 1000
-                nutritionParts.append("Sodium: \(milligrams) mg/100g")
+            if let product = await IndianFMCGBarcodeCache.shared.lookup(barcode: code) {
+                await BarcodeLookupTelemetry.shared.record(barcode: code, outcome: .hit(source: product.source))
+                return product
             }
         }
 
-        return LookedUpProduct(
-            name: name,
-            brand: product.brands,
-            category: product.categoriesEn?.split(separator: ",").first.map(String.init),
-            rawNutritionText: nutritionParts.isEmpty ? nil : nutritionParts.joined(separator: ", "),
-            imageURL: product.imageUrl.flatMap(URL.init),
-            source: "Open Food Facts"
+        switch await attempt({ try await self.lookupUPCItemDB(barcode: codes[0]) }) {
+        case .found(let product):
+            await BarcodeLookupTelemetry.shared.record(barcode: codes[0], outcome: .hit(source: product.source))
+            return product
+        case .failed:
+            sawNetworkFailure = true
+        case .missing:
+            break
+        }
+
+        await BarcodeLookupTelemetry.shared.record(
+            barcode: codes[0],
+            outcome: sawNetworkFailure ? .networkFailure : .miss
         )
+        return nil
+    }
+
+    private func firstOpenFactsHit(code: String) async -> LookupAttempt {
+        var sawFailure = false
+        for catalog in Self.openFactsCatalogs {
+            switch await fetchOpenFacts(code: code, host: catalog.host, source: catalog.source) {
+            case .found(let product):
+                return .found(product)
+            case .failed:
+                sawFailure = true
+            case .missing:
+                break
+            }
+        }
+        return sawFailure ? .failed : .missing
+    }
+
+    private enum LookupAttempt: Equatable {
+        case found(LookedUpProduct)
+        case missing
+        case failed
+    }
+
+    private func attempt(_ body: () async throws -> LookedUpProduct) async -> LookupAttempt {
+        do {
+            return .found(try await body())
+        } catch ProductLookupError.notFound {
+            return .missing
+        } catch {
+            return .failed
+        }
+    }
+
+    // MARK: - Open * Facts family
+
+    /// 404 means this catalog has no row. Only a transport or 5xx error is a failure.
+    private func fetchOpenFacts(code: String, host: String, source: String) async -> LookupAttempt {
+        guard let url = URL(string: "https://\(host)/api/v2/product/\(code).json") else {
+            return .missing
+        }
+        do {
+            let (data, response) = try await session.data(for: Self.identifiedRequest(url: url))
+            guard let http = response as? HTTPURLResponse else {
+                return .failed
+            }
+            if http.statusCode == 404 { return .missing }
+            guard http.statusCode == 200 else { return .failed }
+            let decoded = try JSONDecoder().decode(OpenFoodFactsResponse.self, from: data)
+            guard decoded.status == 1, let product = decoded.product else {
+                return .missing
+            }
+            guard let name = OpenFactsNaming.compose(
+                productName: product.productName,
+                productNameEn: product.productNameEn,
+                productNameHi: product.productNameHi,
+                genericName: product.genericName,
+                abbreviatedName: product.abbreviatedProductName,
+                brands: product.brands,
+                quantity: product.quantity
+            ) else {
+                return .missing
+            }
+            let category = (product.categoriesEn ?? product.categories)?
+                .split(separator: ",")
+                .first
+                .map { String($0).trimmingCharacters(in: .whitespaces) }
+            return .found(LookedUpProduct(
+                name: name,
+                brand: product.brands,
+                category: category,
+                rawNutritionText: product.nutriments?.summary,
+                imageURL: product.imageUrl.flatMap(URL.init),
+                source: source
+            ))
+        } catch {
+            return .failed
+        }
     }
 
     // MARK: - UPCitemdb (fallback for non-food products)
@@ -129,7 +184,13 @@ actor ProductLookupService {
         }
 
         let (data, response) = try await session.data(for: Self.identifiedRequest(url: url))
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ProductLookupError.networkUnavailable
+        }
+        if httpResponse.statusCode == 404 {
+            throw ProductLookupError.notFound
+        }
+        guard httpResponse.statusCode == 200 else {
             throw ProductLookupError.networkUnavailable
         }
 
@@ -164,20 +225,60 @@ nonisolated private struct OpenFoodFactsResponse: Decodable, Sendable {
 nonisolated private struct OFFProduct: Decodable, Sendable {
     let productName: String?
     let productNameEn: String?
+    let productNameHi: String?
     let genericName: String?
+    let abbreviatedProductName: String?
     let brands: String?
+    let categories: String?
     let categoriesEn: String?
+    let quantity: String?
     let imageUrl: String?
     let nutriments: OFFNutriments?
 
     enum CodingKeys: String, CodingKey {
         case productName = "product_name"
         case productNameEn = "product_name_en"
+        case productNameHi = "product_name_hi"
         case genericName = "generic_name"
+        case abbreviatedProductName = "abbreviated_product_name"
         case brands
+        case categories
         case categoriesEn = "categories_en"
+        case quantity
         case imageUrl = "image_url"
         case nutriments
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        productName = try container.decodeIfPresent(String.self, forKey: .productName)
+        productNameEn = try container.decodeIfPresent(String.self, forKey: .productNameEn)
+        productNameHi = try container.decodeIfPresent(String.self, forKey: .productNameHi)
+        genericName = try container.decodeIfPresent(String.self, forKey: .genericName)
+        abbreviatedProductName = try container.decodeIfPresent(String.self, forKey: .abbreviatedProductName)
+        brands = try container.decodeIfPresent(String.self, forKey: .brands)
+        categories = try container.decodeIfPresent(String.self, forKey: .categories)
+        categoriesEn = try container.decodeIfPresent(String.self, forKey: .categoriesEn)
+        quantity = Self.flexibleString(container, .quantity)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        // A messy nutrition blob must not throw away a product we already named.
+        nutriments = try? container.decodeIfPresent(OFFNutriments.self, forKey: .nutriments)
+    }
+
+    private static func flexibleString(
+        _ container: KeyedDecodingContainer<CodingKeys>,
+        _ key: CodingKeys
+    ) -> String? {
+        if let value = try? container.decodeIfPresent(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? container.decodeIfPresent(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? container.decodeIfPresent(Double.self, forKey: key) {
+            return String(value)
+        }
+        return nil
     }
 }
 
@@ -191,6 +292,20 @@ nonisolated private struct OFFNutriments: Decodable, Sendable {
     let fiber100g: Double?
     let sodium100g: Double?
 
+    var summary: String? {
+        var parts: [String] = []
+        if let energyKcal100g { parts.append("Energy: \(energyKcal100g) kcal/100g") }
+        if let proteins100g { parts.append("Protein: \(proteins100g)g/100g") }
+        if let carbohydrates100g { parts.append("Carbohydrates: \(carbohydrates100g)g/100g") }
+        if let sugars100g { parts.append("Sugars: \(sugars100g)g/100g") }
+        if let fat100g { parts.append("Fat: \(fat100g)g/100g") }
+        if let saturatedFat100g { parts.append("Saturated Fat: \(saturatedFat100g)g/100g") }
+        if let fiber100g { parts.append("Fiber: \(fiber100g)g/100g") }
+        // Open Food Facts `sodium_100g` is grams.
+        if let sodium100g { parts.append("Sodium: \(sodium100g * 1000) mg/100g") }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
+
     enum CodingKeys: String, CodingKey {
         case energyKcal100g = "energy-kcal_100g"
         case proteins100g = "proteins_100g"
@@ -200,6 +315,31 @@ nonisolated private struct OFFNutriments: Decodable, Sendable {
         case saturatedFat100g = "saturated-fat_100g"
         case fiber100g = "fiber_100g"
         case sodium100g = "sodium_100g"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        energyKcal100g = Self.flexibleDouble(container, .energyKcal100g)
+        proteins100g = Self.flexibleDouble(container, .proteins100g)
+        carbohydrates100g = Self.flexibleDouble(container, .carbohydrates100g)
+        sugars100g = Self.flexibleDouble(container, .sugars100g)
+        fat100g = Self.flexibleDouble(container, .fat100g)
+        saturatedFat100g = Self.flexibleDouble(container, .saturatedFat100g)
+        fiber100g = Self.flexibleDouble(container, .fiber100g)
+        sodium100g = Self.flexibleDouble(container, .sodium100g)
+    }
+
+    private static func flexibleDouble(
+        _ container: KeyedDecodingContainer<CodingKeys>,
+        _ key: CodingKeys
+    ) -> Double? {
+        if let value = try? container.decodeIfPresent(Double.self, forKey: key) {
+            return value
+        }
+        if let text = try? container.decodeIfPresent(String.self, forKey: key) {
+            return Double(text)
+        }
+        return nil
     }
 }
 

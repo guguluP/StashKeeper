@@ -46,6 +46,8 @@ struct InventorySnapshotItem: Sendable {
     /// product," used both by the general lookup tool and by the
     /// dedicated re-scan matcher below.
     let barcodePayload: String?
+    /// Expiry of this lot. The same barcode with another date is a different lot.
+    let expiryDate: Date?
     /// Raw OCR text captured when this item was originally added. Used to
     /// match serial numbers, model numbers, or lot codes against a fresh
     /// re-scan of what might be the exact same physical object.
@@ -72,6 +74,7 @@ struct InventorySnapshotItem: Sendable {
         self.daysUntilExpiry = item.daysUntilExpiry
         self.searchableText = item.searchableText
         self.barcodePayload = item.barcodePayload
+        self.expiryDate = item.expiryDate
         self.recognizedText = item.recognizedText
         self.priceAmount = item.priceAmount
         self.priceCurrency = item.priceCurrency
@@ -107,22 +110,38 @@ enum ExistingItemMatcher {
     /// candidate and the existing inventory, checked in order from most to
     /// least reliable signal. Returns nil if nothing meets even the "weak"
     /// bar, so a genuinely new item is never forced into a false match.
+    /// Same barcode is the same product. It is the same lot only when the
+    /// expiry dates fall on the same day, or neither side has a date.
+    static func isSameLot(existingExpiry: Date?, candidateExpiry: Date?, calendar: Calendar = .current) -> Bool {
+        switch (existingExpiry, candidateExpiry) {
+        case (nil, nil):
+            return true
+        case let (existing?, candidate?):
+            return calendar.isDate(existing, inSameDayAs: candidate)
+        default:
+            return false
+        }
+    }
+
     static func findMatch(
         barcodePayload: String?,
         recognizedText: [String],
         candidateName: String,
         candidateCategory: String,
+        candidateExpiry: Date? = nil,
         in existingItems: [InventorySnapshotItem]
     ) -> Match? {
-        // 1. Exact barcode match — the gold standard. Two items with the
-        // identical scanned barcode are, for all practical purposes,
-        // guaranteed to be the same product (though not necessarily the
-        // same physical unit if it's a consumable the user buys often —
-        // callers decide whether that means "same item, bump quantity" or
-        // "new unit of a restocked product" based on context).
+        // Same product code merges only into the lot with the same expiry.
+        // A later purchase with a different date stays its own row.
         if let barcodePayload, !barcodePayload.isEmpty {
-            if let match = existingItems.first(where: { $0.barcodePayload == barcodePayload }) {
+            let sameCode = existingItems.filter { $0.barcodePayload == barcodePayload }
+            if let match = sameCode.first(where: {
+                isSameLot(existingExpiry: $0.expiryDate, candidateExpiry: candidateExpiry)
+            }) {
                 return Match(item: match, confidence: .exact, reason: "Matches barcode \(barcodePayload)")
+            }
+            if !sameCode.isEmpty {
+                return nil
             }
         }
 

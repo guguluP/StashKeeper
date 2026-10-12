@@ -23,10 +23,25 @@ nonisolated enum ShoppingListStore {
         } else {
             map.removeValue(forKey: id.uuidString)
         }
-        UserDefaults.standard.set(map, forKey: key)
+        defaults.set(map, forKey: key)
+    }
+
+    private static var defaults: UserDefaults {
+        if SharedModelConfiguration.useAppGroupContainer,
+           let suite = UserDefaults(suiteName: SharedModelConfiguration.appGroupIdentifier) {
+            return suite
+        }
+        return .standard
     }
 
     private static func load() -> [String: Double] {
-        UserDefaults.standard.dictionary(forKey: key) as? [String: Double] ?? [:]
+        if let map = defaults.dictionary(forKey: key) as? [String: Double] {
+            return map
+        }
+        let legacy = UserDefaults.standard.dictionary(forKey: key) as? [String: Double] ?? [:]
+        if !legacy.isEmpty, defaults !== UserDefaults.standard {
+            defaults.set(legacy, forKey: key)
+        }
+        return legacy
     }
 }

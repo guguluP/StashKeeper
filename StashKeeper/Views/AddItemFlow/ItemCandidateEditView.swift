@@ -23,6 +23,7 @@ struct ItemCandidateEditView: View {
     var barcodePayload: String?
     var barcodeLookupSource: String?
     let recognizedText: [String]
+    @Binding var ingredients: String
 
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \StorageLocation.name) private var locations: [StorageLocation]
@@ -37,6 +38,11 @@ struct ItemCandidateEditView: View {
             Form {
                 Section("Item") {
                     TextField("Name", text: $analysis.name)
+                    if barcodePayload == nil, let barcodeLookupSource {
+                        Text("Matched via \(barcodeLookupSource)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     Picker("Category", selection: $analysis.category) {
                         ForEach(ItemAnalysis.categoryOptions, id: \.self) { Text($0).tag($0) }
                     }
@@ -134,6 +140,11 @@ struct ItemCandidateEditView: View {
                     }
                 }
 
+                if !ingredients.isEmpty {
+                    Section("Ingredients") {
+                        TextField("Ingredients", text: $ingredients, axis: .vertical)
+                    }
+                }
                 if analysis.hasUsableNutrition {
                     Section("Nutrition" + (analysis.nutrition.servingSize.isEmpty ? "" : " (per \(analysis.nutrition.servingSize))")) {
                         if analysis.nutrition.calories >= 0 {

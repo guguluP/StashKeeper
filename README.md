@@ -16,9 +16,9 @@ developer portal so launch signing matches the entitlements.
 
 ## Requirements
 
-- Xcode 26+ (Foundation Models, `@Generable`/guided generation, and the
+- Xcode 27+ (Foundation Models, `@Generable`/guided generation, and the
   Liquid Glass UI APIs used throughout require the latest SDK)
-- iOS 26+ / macOS 26+ deployment targets
+- iOS 27+ / macOS 27+ deployment targets
 - A physical Apple Intelligence-eligible device for full AI features to
   exercise the on-device model path (the Simulator can still run the app;
   AI features fall back to the zero-AI heuristic tier — see below — when
@@ -33,10 +33,12 @@ developer portal so launch signing matches the entitlements.
 - Multi-item Vision pipeline: one photo or video can contain several
   distinct items, each detected as its own region, classified, and OCR'd
   independently.
-- Barcode scanning with a three-tier product lookup: Open Food Facts →
-  UPCitemdb → a local, self-learning Indian FMCG cache (seeded with common
-  brands, and it remembers any barcode you manually confirm a name for, so
-  repeat scans resolve instantly).
+- Barcode scanning looks the GTIN up in Open Food Facts, Open Beauty
+  Facts, Open Products Facts, and Open Pet Food Facts, then UPCitemdb and
+  a local cache. A GS1 Digital Link QR is reduced to the same digits as
+  the EAN-13. A catalog miss still reads the large words on the wrapper.
+- Live Activity on the Lock Screen and Dynamic Island while a photo is
+  being analyzed. Tapping it opens Add Item.
 - Camera capture (multi-shot, in addition to the Photos picker) for adding
   items straight from the device camera.
 - Price and nutrition extraction from packaging OCR.
@@ -88,7 +90,16 @@ HealthKit models consumption, not pantry stock.
 - 12 App Intents: What's Expiring, Find Item, How Many, Items in a
   Location, Items by Category, Total Inventory Value, Quick Add, Open
   Item, Add Item, Show Expiring Items, Use One, and Remind Tomorrow.
-- Settings shows on-device barcode lookup hit and miss stats.
+- Settings shows on-device barcode lookup hits, confirmed gaps, and
+  requests that never reached a database.
+- Expiry reminders use the day count at the fire date. Past the system's
+  64-pending cap, the soonest items stay individual and the rest share
+  one daily digest.
+- A household or backup file updates items that already share an id,
+  including nutrition and notes. Photos already stored on this device
+  are left in place.
+- A failed store open copies the database aside and leaves the live
+  files alone.
 - The assistant keeps its chat transcript on device across launches.
 - English string catalog at `StashKeeper/Localizable.xcstrings`, with
   VoiceOver labels on icon-only controls.

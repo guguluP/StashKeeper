@@ -109,15 +109,9 @@ final class HealthKitService {
     /// true only if samples were actually written, so callers can
     /// accurately record sync status rather than assuming success.
     ///
-    /// Design note: this logs the moment the item is *added to the stash*,
-    /// not a claim that the user has eaten it — HealthKit has no "food I
-    /// own" concept, only "food I consumed," so this is a reasonable but
-    /// imperfect mapping. The sample's metadata is tagged with the source
-    /// item name and "StashKeeper (logged at storage time, not consumption)"
-    /// so it's clear in the Health app what generated the entry, and a user
-    /// who wants stricter consumption tracking can delete/adjust entries
-    /// there directly — Health is the source of truth for their health data,
-    /// not this app.
+    /// Logs one serving as food the person ate. Each successful call writes
+    /// a new sample, so a second serving later is a second tap. The numbers
+    /// are the item's per-serving facts, not the whole quantity on the shelf.
     @discardableResult
     func logNutrition(for item: StashItem) async -> Bool {
         guard isHealthDataAvailable, hasWriteAuthorization() else { return false }
@@ -128,7 +122,7 @@ final class HealthKitService {
         let metadata: [String: Any] = [
             HKMetadataKeyFoodType: item.name,
             "StashKeeperSourceItemID": item.id.uuidString,
-            "StashKeeperNote": "Logged at storage time, not confirmed consumption"
+            "StashKeeperNote": "One serving logged as eaten in StashKeeper"
         ]
 
         func makeSample(_ nutrient: WritableNutrient, value: Double?, unit: HKUnit) -> HKQuantitySample? {

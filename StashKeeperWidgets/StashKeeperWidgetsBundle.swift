@@ -32,6 +32,7 @@ struct StashScanLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: StashScanActivityAttributes.self) { context in
             StashScanActivityView(context: context)
+                .widgetURL(URL(string: "stashkeeper://add"))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {

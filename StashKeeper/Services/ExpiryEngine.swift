@@ -15,46 +15,18 @@ final class ExpiryEngine {
 
     static let shared = ExpiryEngine()
 
-    private let notificationManager = NotificationManager.shared
-
     /// Re-schedules notifications for a single item based on its current expiry date.
     /// Call this whenever an item is created or its expiry date changes.
     func syncNotifications(for item: StashItem) async {
-        await notificationManager.cancelNotifications(ids: item.scheduledNotificationIDs)
-        item.scheduledNotificationIDs = []
-        item.expiredNotificationSent = false
-
-        guard item.isPerishable, let expiryDate = item.expiryDate, expiryDate > .now else {
-            return
-        }
-
-        var newIDs: [String] = []
-
-        // Warning notification, N days before expiry.
-        if let warnDate = Calendar.current.date(
-            byAdding: .day,
-            value: -StashItem.warningWindowDays,
-            to: expiryDate
-        ), warnDate > .now {
-            if let id = await notificationManager.scheduleExpiryWarning(for: item, fireDate: warnDate) {
-                newIDs.append(id)
-            }
-        }
-
-        // Day-of expiry notification.
-        if let id = await notificationManager.scheduleExpiredNotice(for: item, fireDate: expiryDate) {
-            newIDs.append(id)
-        }
-
-        item.scheduledNotificationIDs = newIDs
+        await StashReminders.sync(item)
     }
 
     /// Sweeps every item and makes sure notification state matches current data.
     /// Useful after bulk edits, imports, or as a periodic background task.
+    /// Soonest items get individual reminders. The rest share one daily digest
+    /// so the 64-pending cap cannot drop them silently.
     func resyncAll(items: [StashItem]) async {
-        for item in items {
-            await syncNotifications(for: item)
-        }
+        await StashReminders.resyncAll(items)
     }
 
     /// Items due for in-app "expiring soon" / "expired" surfacing, most urgent first.

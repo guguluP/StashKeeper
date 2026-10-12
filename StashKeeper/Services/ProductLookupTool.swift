@@ -37,15 +37,11 @@ nonisolated private struct ProductLookupToolResult: Codable, Sendable {
 struct ProductLookupTool: Tool {
     let name = "lookupProductByBarcode"
     let description = """
-        Looks up a product by its barcode/UPC/EAN number against online
-        product databases (Open Food Facts, UPCitemdb, plus a local Indian
-        FMCG cache). Use this when the user provides or references a
-        barcode number directly, or when you need authoritative grounding
-        for a product's real name/brand/category/nutrition beyond what's
-        visually apparent. Only pass digits — strip any spaces or
-        formatting from the barcode first. Returns "not found" gracefully
-        if no database has this code; don't treat that as an error, just
-        tell the user honestly that this specific code wasn't found.
+        Looks up a product by its barcode against Open Food Facts, Open
+        Beauty Facts, Open Products Facts, Open Pet Food Facts, UPCitemdb,
+        and the on-device Indian cache. Pass the digits, or a GS1 Digital
+        Link copied off the pack. A miss means none of those catalogs have
+        this code. Say so plainly and do not invent a product.
         """
 
     private let lookupService = ProductLookupService()
@@ -57,7 +53,7 @@ struct ProductLookupTool: Tool {
     }
 
     func call(arguments: Arguments) async throws -> String {
-        let cleaned = arguments.barcode.filter(\.isNumber)
+        let cleaned = arguments.barcode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else {
             return Self.encode(ProductLookupToolResult(
                 found: false, name: nil, brand: nil, category: nil,

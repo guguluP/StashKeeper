@@ -54,7 +54,20 @@ enum SharedModelConfiguration {
     /// group is enabled in Signing & Capabilities.
     nonisolated static let useAppGroupContainer = true
 
-    static let sharedSchema = Schema([StashItem.self, StorageLocation.self, StreakRecord.self])
+    static let sharedSchema = Schema([
+        StashItem.self,
+        StorageLocation.self,
+        StreakRecord.self,
+        PurchaseNeed.self,
+    ])
+
+    static var cloudBackedConfiguration: ModelConfiguration {
+        ModelConfiguration(
+            schema: sharedSchema,
+            groupContainer: .identifier(appGroupIdentifier),
+            cloudKitDatabase: .private(CloudSyncGate.containerID)
+        )
+    }
 
     static var sharedConfiguration: ModelConfiguration {
         ModelConfiguration(schema: sharedSchema, groupContainer: .identifier(appGroupIdentifier))
@@ -70,12 +83,27 @@ enum SharedModelConfiguration {
     }
 
     static func makeContainer() -> ModelContainer {
+        // Only the app may move an unreadable store aside. A widget refresh
+        // that loses a lock must not relocate the file the app has open.
+        let mayReplace = Bundle.main.bundleURL.pathExtension != "appex"
+        // Try iCloud once. A failure must not move the local store aside.
+        if mayReplace, CloudSyncGate.isEntitled, let container = tryCreate(cloudBackedConfiguration) {
+            return container
+        }
         if useAppGroupContainer {
-            if let container = openOrRepair(sharedConfiguration, storeDirectory: appGroupStoreDirectory) {
+            if let container = openOrRepair(
+                sharedConfiguration,
+                storeDirectory: appGroupStoreDirectory,
+                replacingUnreadableStore: mayReplace
+            ) {
                 return container
             }
         }
-        if let container = openOrRepair(defaultConfiguration, storeDirectory: applicationSupportStoreDirectory) {
+        if let container = openOrRepair(
+            defaultConfiguration,
+            storeDirectory: applicationSupportStoreDirectory,
+            replacingUnreadableStore: mayReplace
+        ) {
             return container
         }
         // Last resort: in-memory so launch never hard-crashes. Inventory
@@ -92,10 +120,19 @@ enum SharedModelConfiguration {
 
     private static func openOrRepair(
         _ configuration: ModelConfiguration,
-        storeDirectory: URL?
+        storeDirectory: URL?,
+        replacingUnreadableStore: Bool
     ) -> ModelContainer? {
         if let container = tryCreate(configuration) {
             return container
+        }
+        // A second process can hold the store for a moment. Retry before
+        // treating the file as unreadable.
+        for _ in 0..<4 {
+            usleep(80_000)
+            if let container = tryCreate(configuration) {
+                return container
+            }
         }
         // Quarantine xattrs on SQLite files in the group container cause
         // SQLITE_AUTH (23) / NSCocoaErrorDomain 256 "couldn't be opened".
@@ -103,7 +140,10 @@ enum SharedModelConfiguration {
         if let container = tryCreate(configuration) {
             return container
         }
-        destroyStoreFiles(in: storeDirectory)
+        // The bytes move into a backup folder. They are not deleted.
+        // The widget never does this.
+        guard replacingUnreadableStore, let storeDirectory else { return nil }
+        guard StoreFileRecovery.relocateAside(in: storeDirectory) != nil else { return nil }
         return tryCreate(configuration)
     }
 
@@ -139,20 +179,8 @@ enum SharedModelConfiguration {
         }
     }
 
-    private static func destroyStoreFiles(in directory: URL?) {
-        guard let directory else { return }
-        for url in storeFileURLs(in: directory) {
-            try? FileManager.default.removeItem(at: url)
-        }
-    }
-
     private static func storeFileURLs(in directory: URL) -> [URL] {
-        let names = [
-            "default.store",
-            "default.store-wal",
-            "default.store-shm",
-        ]
-        return names.map { directory.appendingPathComponent($0) }
+        StoreFileRecovery.storeFileURLs(in: directory)
     }
 }
 

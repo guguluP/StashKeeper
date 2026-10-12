@@ -35,8 +35,19 @@ enum StashItemLifecycle {
 
         if !notificationIDs.isEmpty {
             Task {
-                await NotificationManager.shared.cancelNotifications(ids: notificationIDs)
+                await StashReminders.cancel(ids: notificationIDs)
             }
         }
+    }
+
+    /// Quantity, expiry, or location changed. Refresh the reminder, the
+    /// index, and the widgets from the saved row.
+    @MainActor
+    static func afterEdit(_ item: StashItem, in context: ModelContext) async {
+        await StashReminders.sync(item)
+        try? context.save()
+        await SpotlightIndexer.index(item: item)
+        reloadWidgets()
+        await GroceryList.publish()
     }
 }

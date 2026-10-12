@@ -172,6 +172,7 @@ struct InventoryAdjustmentTool: Tool, @unchecked Sendable {
         item.quantity = newQuantity
         item.updatedAt = .now
         try? modelContext.save()
+        Task { await StashItemLifecycle.afterEdit(item, in: modelContext) }
 
         let clampNote = (previousQuantity + arguments.quantityDelta) < 0
             ? " (requested decrease exceeded what was on hand, so it was clamped to 0 rather than going negative)"

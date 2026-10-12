@@ -318,10 +318,16 @@ struct ItemRowInteractions: ViewModifier {
     /// deliberately stays lightweight compared to the full save path in
     /// AddItemFlowView.
     private func adjustQuantity(by delta: Int) {
+        let before = item.quantity
         item.quantity = max(0, item.quantity + delta)
-        item.updatedAt = .now
+        let deltaApplied = item.quantity - before
+        if deltaApplied < 0 {
+            item.noteChange(item.quantity == 0 ? "used the last one" : "used \(-deltaApplied), \(item.quantity) left")
+        } else if deltaApplied > 0 {
+            item.noteChange("added \(deltaApplied)")
+        }
         try? modelContext.save()
-        reloadWidgets()
+        Task { await StashItemLifecycle.afterEdit(item, in: modelContext) }
     }
 }
 

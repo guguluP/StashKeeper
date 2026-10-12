@@ -10,30 +10,90 @@ import SwiftData
 
 struct ShoppingListView: View {
     @Query private var items: [StashItem]
+    @Query(sort: \PurchaseNeed.createdAt, order: .reverse) private var needs: [PurchaseNeed]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.displayMetrics) private var metrics
     @State private var revision = 0
+    @State private var showChecked = false
+    @State private var newBuyName = ""
 
-    private var rows: [StashItem] {
+    private var attention: [StashItem] {
         _ = revision
         return ExpiryEngine.shared.attentionNeeded(items: items)
     }
 
+    private var rows: [StashItem] {
+        if showChecked { return attention }
+        return attention.filter {
+            !ShoppingListStore.isHandled(id: $0.id, expiry: $0.expiryDate)
+        }
+    }
+
+    private var shortfalls: [StashItem] {
+        items
+            .filter { $0.parQuantity > $0.quantity }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private var openNeeds: [PurchaseNeed] {
+        needs.filter { !$0.isChecked }
+    }
+
     var body: some View {
         Group {
-            if rows.isEmpty {
-                ContentUnavailableView(
-                    "Nothing to use up",
-                    systemImage: "checklist",
-                    description: Text("Items that are expiring or expired show up here so you can use them or replace them.")
-                )
-            } else {
-                List {
-                    Section {
-                        Text("Checked items stay off this list until their expiry date changes.")
-                            .font(.subheadline)
+            List {
+                Section {
+                    Text("Use soon is what is expiring. To buy is what you are below the amount you keep, plus anything you add here.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Section("To buy") {
+                    if shortfalls.isEmpty && openNeeds.isEmpty {
+                        Text("Nothing to buy.")
                             .foregroundStyle(.secondary)
                     }
+                    ForEach(shortfalls) { item in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.name)
+                            Text("Have \(item.quantity), keep \(item.parQuantity). Buy \(item.parQuantity - item.quantity).")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    ForEach(openNeeds) { need in
+                        HStack {
+                            Text(need.name)
+                            Spacer()
+                            Text("×\(need.quantity)")
+                                .foregroundStyle(.secondary)
+                        }
+                        .swipeActions {
+                            Button("Bought", role: .destructive) {
+                                need.isChecked = true
+                                try? modelContext.save()
+                                Task { await GroceryList.publish() }
+                            }
+                        }
+                    }
+                    TextField("Add something to buy", text: $newBuyName)
+                    Button("Add to buy list") {
+                        let trimmed = newBuyName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        modelContext.insert(PurchaseNeed(name: trimmed))
+                        try? modelContext.save()
+                        newBuyName = ""
+                        Task { await GroceryList.publish() }
+                    }
+                    .disabled(newBuyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                if rows.isEmpty {
+                    Section("Use or replace") {
+                        Text(attention.isEmpty
+                             ? "Nothing is expiring."
+                             : "Checked items stay off this list until their expiry date changes.")
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
                     Section("Use or replace") {
                         ForEach(rows) { item in
                             row(item)
@@ -43,6 +103,15 @@ struct ShoppingListView: View {
             }
         }
         .navigationTitle("Shopping")
+        .toolbar {
+            if attention.contains(where: { ShoppingListStore.isHandled(id: $0.id, expiry: $0.expiryDate) }) {
+                ToolbarItem(placement: .automatic) {
+                    Button(showChecked ? "Hide checked" : "Show checked") {
+                        showChecked.toggle()
+                    }
+                }
+            }
+        }
         .adaptivePage()
     }
 
@@ -80,8 +149,11 @@ struct ShoppingListView: View {
         }
 
         let used = Button("Used one") {
-            _ = item.consumeOneUnit(in: modelContext)
-            ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: true)
+            let remaining = item.consumeOneUnit(in: modelContext)
+            if remaining == 0 {
+                ShoppingListStore.setHandled(id: item.id, expiry: item.expiryDate, handled: false)
+            }
+            Task { await StashItemLifecycle.afterEdit(item, in: modelContext) }
             revision += 1
         }
         .font(.subheadline)

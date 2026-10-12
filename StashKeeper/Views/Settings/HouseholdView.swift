@@ -25,10 +25,10 @@ struct HouseholdView: View {
     var body: some View {
         Form {
             Section {
-                Text("Send your stash to someone else as a file. When they import it, new items and places are added. Items they already have, matched by id, are left as they are.")
+                Text("Send your stash to someone else as a file. Import adds new items and places, and updates items that share an id. Photos already on this device stay here.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("This is not a live shared database. Photos stay on the device that took them.")
+                Text("Devices signed into this iCloud account share the stash when iCloud is enabled for StashKeeper. A file is still how you hand a copy to someone else. Photos stay on the device that took them. Quantity changes record the household name from Settings.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -69,15 +69,18 @@ struct HouseholdView: View {
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.json]) { result in
             switch result {
             case .success(let url):
-                guard url.startAccessingSecurityScopedResource() else {
-                    statusMessage = "Couldn't read that file."
-                    return
-                }
-                defer { url.stopAccessingSecurityScopedResource() }
+                let accessed = url.startAccessingSecurityScopedResource()
+                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
                 do {
                     let data = try Data(contentsOf: url)
-                    let count = try InventoryExport.importBackup(data, into: modelContext)
-                    statusMessage = "Added \(count) new item\(count == 1 ? "" : "s")."
+                    let result = try InventoryExport.importBackup(data, into: modelContext)
+                    statusMessage = "Added \(result.inserted) new item\(result.inserted == 1 ? "" : "s"), updated \(result.updated)."
+                    Task {
+                        let fetched = (try? modelContext.fetch(FetchDescriptor<StashItem>())) ?? items
+                        await ExpiryEngine.shared.resyncAll(items: fetched)
+                        try? modelContext.save()
+                        reloadWidgets()
+                    }
                 } catch {
                     statusMessage = error.localizedDescription
                 }

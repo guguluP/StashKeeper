@@ -91,6 +91,7 @@ struct AddItemFlowView: View {
     @State private var priceByCandidate: [UUID: (amount: Double, currency: String, autoDetected: Bool)] = [:]
     @State private var barcodeByCandidate: [UUID: String?] = [:]
     @State private var barcodeSourceByCandidate: [UUID: String?] = [:]
+    @State private var ingredientsByCandidate: [UUID: String] = [:]
     /// Flattened OCR text per candidate, kept around so the cross-photo
     /// duplicate/angle detection pass and the item detail "Text Found on
     /// Item" section can reference it without re-running Vision.
@@ -299,10 +300,9 @@ struct AddItemFlowView: View {
         for (index, imageData) in imageDatas.enumerated() {
             let progressMessage = "Analyzing photo \(index + 1) of \(imageDatas.count)…"
             stage = .analyzing(progress: progressMessage)
-            StashScanActivityController.shared.updateProgress(
-                photoIndex: index,
-                totalPhotoCount: imageDatas.count,
+            await StashScanActivityController.shared.update(
                 message: progressMessage,
+                fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.2),
                 itemsFoundSoFar: totalItemsFoundSoFar
             )
 
@@ -324,20 +324,46 @@ struct AddItemFlowView: View {
                         to: region.normalizedBoundingBox, in: barcodes
                     ) {
                         input.barcodePayload = nearestBarcode.payload
-                        // Barcode lookup only kicks in as a fallback grounding
-                        // signal — Apple Intelligence still makes the final
-                        // call, but having a real product name/category from
-                        // a database dramatically improves accuracy for
-                        // packaged goods where visual classification alone
-                        // is weak (e.g. two similar-looking snack bags).
-                        stage = .analyzing(progress: "Looking up scanned barcode…")
+                        // A database name helps, but Indian barcodes are often
+                        // missing. The wrapper read below still names the product.
+                        stage = .analyzing(progress: "Reading barcode…")
+                        await StashScanActivityController.shared.update(
+                            message: "Reading barcode…",
+                            fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.45),
+                            itemsFoundSoFar: totalItemsFoundSoFar
+                        )
                         input.lookedUpProduct = await productLookupService.lookup(barcode: nearestBarcode.payload)
+                    }
+
+                    if input.lookedUpProduct == nil {
+                        let labelLines = PackageLabelReader.lines(
+                            region: region.recognizedText,
+                            regionBox: region.normalizedBoundingBox,
+                            global: observations.globalRecognizedText
+                        )
+                        if let fromPackage = PackageLabelReader.product(
+                            from: labelLines,
+                            barcode: input.barcodePayload
+                        ) {
+                            input.lookedUpProduct = fromPackage
+                            stage = .analyzing(progress: "Reading the package…")
+                            await StashScanActivityController.shared.update(
+                                message: "Reading the package…",
+                                fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.6),
+                                itemsFoundSoFar: totalItemsFoundSoFar
+                            )
+                        }
                     }
 
                     regionInputs.append(input)
                 }
 
                 stage = .analyzing(progress: progressMessage)
+                await StashScanActivityController.shared.update(
+                    message: progressMessage,
+                    fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.8),
+                    itemsFoundSoFar: totalItemsFoundSoFar
+                )
 
                 let analyses: [ItemAnalysis]
                 var usedHeuristicFallback = false
@@ -365,13 +391,24 @@ struct AddItemFlowView: View {
 
                 var candidates: [DetectionOverlayView.Candidate] = []
                 let existingSnapshots = existingItems.map(InventorySnapshotItem.init)
-                for (index2, (region, analysis)) in zip(observations.regions, analyses).enumerated() {
+                for (index2, (region, rawAnalysis)) in zip(observations.regions, analyses).enumerated() {
                     let input = regionInputs[index2]
+                    var analysis = rawAnalysis
+                    let labelText = (region.recognizedText + observations.globalRecognizedText).map(\.text)
+                    if let label = NutritionLabelReader.read(labelText) {
+                        if label.nutrientCount >= 2 {
+                            analysis.nutrition = label.nutrition
+                        }
+                        if !label.ingredients.isEmpty {
+                            ingredientsByCandidate[region.id] = label.ingredients
+                        }
+                    }
                     let existingMatch = ExistingItemMatcher.findMatch(
                         barcodePayload: input.barcodePayload,
                         recognizedText: region.recognizedText.map(\.text),
                         candidateName: analysis.name,
                         candidateCategory: analysis.category,
+                        candidateExpiry: expiryDateByCandidate[region.id],
                         in: existingSnapshots
                     )
                     let candidate = DetectionOverlayView.Candidate(
@@ -385,7 +422,9 @@ struct AddItemFlowView: View {
                     candidates.append(candidate)
 
                     quantityByCandidate[region.id] = 1
-                    expiryDateByCandidate[region.id] = analysis.estimatedExpiryDate ?? .now
+                    if let estimated = analysis.estimatedExpiryDate {
+                        expiryDateByCandidate[region.id] = estimated
+                    }
                     if !analysis.suggestedLocationHint.isEmpty {
                         let match = locations.first {
                             $0.name.localizedCaseInsensitiveCompare(analysis.suggestedLocationHint) == .orderedSame
@@ -745,7 +784,11 @@ struct AddItemFlowView: View {
             ),
             barcodePayload: barcodeByCandidate[candidateID] ?? nil,
             barcodeLookupSource: barcodeSourceByCandidate[candidateID] ?? nil,
-            recognizedText: recognizedTextByCandidate[candidateID] ?? []
+            recognizedText: recognizedTextByCandidate[candidateID] ?? [],
+            ingredients: Binding(
+                get: { ingredientsByCandidate[candidateID] ?? "" },
+                set: { ingredientsByCandidate[candidateID] = $0 }
+            )
         ))
     }
 
@@ -785,8 +828,13 @@ struct AddItemFlowView: View {
         }
         try? modelContext.save()
         ItemIntelligenceService.shared.invalidateSessions()
-        reloadWidgets()
-        Task { await SpotlightIndexer.reindexAll() }
+        Task {
+            let saved = (try? modelContext.fetch(FetchDescriptor<StashItem>())) ?? []
+            await ExpiryEngine.shared.resyncAll(items: saved)
+            try? modelContext.save()
+            reloadWidgets()
+            await SpotlightIndexer.reindexAll()
+        }
         dismiss()
     }
 
@@ -823,6 +871,21 @@ struct AddItemFlowView: View {
         }
 
         // Fill in barcode / lookup source if the existing row lacked them.
+        if existingItem.ingredients == nil, let ingredients = ingredientsByCandidate[candidate.id], !ingredients.isEmpty {
+            existingItem.ingredients = ingredients
+        }
+        if !existingItem.hasNutrition, candidate.analysis.hasUsableNutrition {
+            let facts = candidate.analysis.nutrition
+            existingItem.nutritionServingSize = facts.servingSize.isEmpty ? nil : facts.servingSize
+            existingItem.nutritionCalories = facts.calories >= 0 ? facts.calories : nil
+            existingItem.nutritionProteinGrams = facts.proteinGrams >= 0 ? facts.proteinGrams : nil
+            existingItem.nutritionCarbsGrams = facts.carbsGrams >= 0 ? facts.carbsGrams : nil
+            existingItem.nutritionSugarGrams = facts.sugarGrams >= 0 ? facts.sugarGrams : nil
+            existingItem.nutritionFatGrams = facts.fatGrams >= 0 ? facts.fatGrams : nil
+            existingItem.nutritionFiberGrams = facts.fiberGrams >= 0 ? facts.fiberGrams : nil
+            existingItem.nutritionSodiumMilligrams = facts.sodiumMilligrams >= 0 ? facts.sodiumMilligrams : nil
+        }
+
         if existingItem.barcodePayload == nil || existingItem.barcodePayload?.isEmpty == true,
            let payload = barcodeByCandidate[candidate.id] ?? nil,
            !payload.isEmpty {
@@ -836,7 +899,6 @@ struct AddItemFlowView: View {
             existingItem.isPerishable = true
             existingItem.expiryDate = newExpiry
             existingItem.expiryConfidence = candidate.analysis.expiryConfidence
-            Task { await ExpiryEngine.shared.syncNotifications(for: existingItem) }
         }
 
         // Attach this scan's photo as an additional angle when save succeeds.
@@ -874,7 +936,7 @@ struct AddItemFlowView: View {
         }
 
         let quantity = quantityByCandidate[candidate.id] ?? 1
-        let expiryDate = expiryDateByCandidate[candidate.id] ?? .now
+        let expiryDate = expiryDateByCandidate[candidate.id]
         let priceInfo = priceByCandidate[candidate.id]
 
         let item = StashItem(
@@ -895,11 +957,11 @@ struct AddItemFlowView: View {
             priceDetectedAutomatically: priceInfo?.autoDetected ?? false,
             barcodePayload: barcodeByCandidate[candidate.id] ?? nil,
             barcodeLookupSource: barcodeSourceByCandidate[candidate.id] ?? nil,
-            nutrition: analysis.hasUsableNutrition ? analysis.nutrition : nil
+            nutrition: analysis.hasUsableNutrition ? analysis.nutrition : nil,
+            ingredients: ingredientsByCandidate[candidate.id]
         )
 
         modelContext.insert(item)
-        Task { await ExpiryEngine.shared.syncNotifications(for: item) }
 
         // If this candidate had a scanned barcode but no online/local
         // database recognized it, the user's confirmed name at save time
@@ -908,8 +970,9 @@ struct AddItemFlowView: View {
         // instantly next time instead of repeating the same round trip
         // and coming up empty again.
         let lookupSource: String? = barcodeSourceByCandidate[candidate.id] ?? nil
+        let learnedFromPackage = lookupSource == nil || lookupSource == PackageLabelReader.packageSource
         if let payload = barcodeByCandidate[candidate.id] ?? nil, !payload.isEmpty,
-           lookupSource == nil {
+           learnedFromPackage {
             Task {
                 await IndianFMCGBarcodeCache.shared.learn(
                     barcode: payload, name: item.name, category: item.category

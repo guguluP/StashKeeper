@@ -348,6 +348,15 @@ struct StashKeeperShortcuts: AppShortcutsProvider {
             systemImageName: "indianrupeesign.circle"
         )
         AppShortcut(
+            intent: GroceriesNeededIntent(),
+            phrases: [
+                "What groceries do I need in \(.applicationName)",
+                "What should I buy in \(.applicationName)"
+            ],
+            shortTitle: "Groceries to Buy",
+            systemImageName: "cart"
+        )
+        AppShortcut(
             intent: QuickAddItemIntent(),
             phrases: [
                 "Add an item to \(.applicationName)",

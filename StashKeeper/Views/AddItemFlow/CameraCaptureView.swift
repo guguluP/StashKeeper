@@ -292,7 +292,7 @@ private final class CameraCaptureModel {
 }
 
 #if os(iOS)
-private struct CameraPreviewLayer: UIViewRepresentable {
+struct CameraPreviewLayer: UIViewRepresentable {
     let session: AVCaptureSession
 
     func makeUIView(context: Context) -> PreviewUIView {
@@ -310,7 +310,7 @@ private struct CameraPreviewLayer: UIViewRepresentable {
     }
 }
 #else
-private struct CameraPreviewLayer: NSViewRepresentable {
+struct CameraPreviewLayer: NSViewRepresentable {
     let session: AVCaptureSession
 
     func makeNSView(context: Context) -> PreviewNSView {

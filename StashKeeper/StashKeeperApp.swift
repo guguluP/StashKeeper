@@ -28,6 +28,7 @@ struct StashKeeperApp: App {
                     await resyncAllNotifications()
                     MilestoneEngine.shared.recordDailyActivity(context: modelContainer.mainContext)
                     await SpotlightIndexer.reindexAll()
+                    await GroceryList.publish()
                 }
         }
         .modelContainer(modelContainer)
