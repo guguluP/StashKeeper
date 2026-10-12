@@ -27,6 +27,11 @@ nonisolated struct LookedUpProduct: Sendable, Equatable {
     let rawNutritionText: String?
     let imageURL: URL?
     let source: String
+    /// Nutrition the household already confirmed for this barcode.
+    var nutrition: NutritionFacts? = nil
+    var ingredients: String? = nil
+    /// Large wrapper words, used to recognize the same pack later.
+    var wrapperTokens: [String] = []
 }
 
 nonisolated enum ProductLookupError: Error {
@@ -57,12 +62,20 @@ actor ProductLookupService {
         ("Open Pet Food Facts", "world.openpetfoodfacts.org"),
     ]
 
-    /// Looks the barcode up as a GTIN. A 404 from one catalog is "not in
-    /// that catalog", so the next catalog still runs. A transport or server
+    /// Looks the barcode up as a GTIN. A name this household confirmed
+    /// wins before any catalog. A 404 from one catalog is "not in that
+    /// catalog", so the next catalog still runs. A transport or server
     /// error is recorded separately and does not hide a later hit.
     func lookup(barcode: String) async -> LookedUpProduct? {
         let codes = BarcodeCodes.candidates(from: barcode)
         guard !codes.isEmpty else { return nil }
+
+        for code in codes {
+            if let confirmed = await IndianFMCGBarcodeCache.shared.learned(barcode: code) {
+                await BarcodeLookupTelemetry.shared.record(barcode: code, outcome: .hit(source: confirmed.source))
+                return confirmed
+            }
+        }
 
         var sawNetworkFailure = false
         for code in codes {
@@ -76,7 +89,7 @@ actor ProductLookupService {
                 sawNetworkFailure = true
             }
 
-            if let product = await IndianFMCGBarcodeCache.shared.lookup(barcode: code) {
+            if let product = IndianFMCGBarcodeCache.seeded(barcode: code) {
                 await BarcodeLookupTelemetry.shared.record(barcode: code, outcome: .hit(source: product.source))
                 return product
             }

@@ -16,6 +16,7 @@ import WidgetKit
 extension Notification.Name {
     static let requestNewItemFlow = Notification.Name("requestNewItemFlow")
     static let showExpiringItems = Notification.Name("showExpiringItems")
+    static let focusSearch = Notification.Name("focusSearch")
 }
 
 /// Set before a NotificationCenter post so a cold launch still opens the

@@ -2,13 +2,12 @@
 //  RootView.swift
 //  StashKeeper
 //
-//  Adaptive root navigation:
-//  - iPhone (compact width): bottom TabView, one NavigationStack per tab so
-//    each section keeps its own back-stack, plus a floating Add button.
-//  - iPad / macOS (regular width): NavigationSplitView sidebar, which also
-//    covers iPad Slide Over/compact multitasking via the size-class check.
-//  Handles routing from notification taps and the macOS menu bar "New Item"
-//  command in both layouts identically.
+//  Each device gets the navigation it already uses:
+//  - iPhone: a five-item tab bar (Home, Items, Shopping, More, Search).
+//  - iPad: a sidebar in a split view, including Settings.
+//  - Mac: the same split view, with the system sidebar style. Settings
+//    opens from the app menu, not the sidebar.
+//  iPad Slide Over uses the iPhone tabs because the width is compact.
 //
 
 import SwiftUI
@@ -40,6 +39,27 @@ struct RootView: View {
             case .settings: return "gearshape"
             }
         }
+
+        /// Short labels for tabs and the sidebar. The screens keep their own titles.
+        var label: String {
+            switch self {
+            case .dashboard: return "Home"
+            case .allItems: return "Items"
+            default: return rawValue
+            }
+        }
+    }
+
+    private var stashSections: [Section] {
+        [.dashboard, .allItems, .locations, .shopping, .search]
+    }
+
+    private var personalSections: [Section] {
+        #if os(macOS)
+        [.household, .milestones]
+        #else
+        [.household, .milestones, .settings]
+        #endif
     }
 
     @State private var selectedSection: Section? = .dashboard
@@ -55,121 +75,101 @@ struct RootView: View {
         Group {
             #if os(iOS)
             if horizontalSizeClass == .compact {
-                compactLayout
+                phoneLayout
             } else {
-                regularLayout
+                padLayout
             }
             #else
-            regularLayout
+            macLayout
             #endif
         }
         .displayAdaptive()
         .task { drainPendingRoute() }
     }
 
-    // MARK: - iPhone layout (compact width)
+    // MARK: - iPhone
 
     #if os(iOS)
     @ViewBuilder
-    private var compactLayout: some View {
+    private var phoneLayout: some View {
         TabView(selection: $selectedSection) {
-                ForEach(Section.allCases.filter { $0 != .search }) { section in
-                    Tab(section.rawValue, systemImage: section.systemImage, value: Optional(section)) {
-                        NavigationStack {
-                            tabDestinationView(for: section)
-                                .toolbar {
-                                    ToolbarItem(placement: .primaryAction) {
-                                        Button {
-                                            StashHaptics.impact()
-                                            showingAddItem = true
-                                        } label: {
-                                            Image(systemName: "plus.circle.fill")
-                                        }
-                                        .accessibilityLabel("Add Item")
-                                    }
-                                }
-                        }
-                    }
-                    .badge(badgeCount(for: section))
-                }
-                Tab("Search", systemImage: "magnifyingglass", value: Optional(Section.search), role: .search) {
-                    NavigationStack {
-                        SearchView()
-                    }
+            Tab(Section.dashboard.label, systemImage: Section.dashboard.systemImage, value: Optional(Section.dashboard)) {
+                phoneStack { DashboardView() }
+            }
+            Tab(Section.allItems.label, systemImage: Section.allItems.systemImage, value: Optional(Section.allItems)) {
+                phoneStack { AllItemsView() }
+            }
+            Tab(Section.shopping.label, systemImage: Section.shopping.systemImage, value: Optional(Section.shopping)) {
+                phoneStack { ShoppingListView() }
+            }
+            .badge(badgeCount(for: .shopping))
+            Tab("More", systemImage: "ellipsis", value: Optional(Section.settings)) {
+                NavigationStack {
+                    PhoneMoreView()
+                        .phoneAddToolbar { showingAddItem = true }
                 }
             }
-        .sheet(isPresented: $showingAddItem) {
-            AddItemFlowView()
-                .sheetPopIn()
-        }
-        .sheet(item: routedItemBinding) { item in
-            NavigationStack {
-                ItemDetailSheetWrapper(item: item)
-            }
-            .sheetPopIn()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
-            StashPendingRoute.showAddItem = false
-            showingAddItem = true
-        }
-        .onOpenURL(perform: handleOpenURL)
-        .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
-            StashPendingRoute.itemID = nil
-            if let id = notification.userInfo?["itemID"] as? UUID {
-                routedItemID = id
+            Tab("Search", systemImage: "magnifyingglass", value: Optional(Section.search), role: .search) {
+                phoneStack { SearchView() }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
-            StashPendingRoute.showExpiring = false
-            selectedSection = .shopping
-        }
+        .rootRouting(
+            showingAddItem: $showingAddItem,
+            routedItem: routedItemBinding,
+            onOpenURL: handleOpenURL,
+            onShowShopping: { selectedSection = .shopping },
+            onFocusSearch: { selectedSection = .search },
+            onOpenItem: { routedItemID = $0 }
+        )
     }
 
-    /// Each tab hosts a section directly (not through `destinationView`,
-    /// which is keyed off `selectedSection` for the split-view detail pane)
-    /// so every tab keeps its own live view rather than being torn down
-    /// when the user switches tabs.
-    @ViewBuilder
-    private func tabDestinationView(for section: Section) -> some View {
-        switch section {
-        case .dashboard: DashboardView()
-        case .search: SearchView()
-        case .locations: LocationsListView()
-        case .allItems: AllItemsView()
-        case .shopping: ShoppingListView()
-        case .household: HouseholdView()
-        case .milestones: MilestonesView()
-        case .settings: SettingsView()
+    private func phoneStack<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        NavigationStack {
+            content()
+                .phoneAddToolbar { showingAddItem = true }
         }
     }
 
     #endif
 
-    // MARK: - iPad / macOS layout (regular width)
+    // MARK: - iPad
 
-    @ViewBuilder
-    private var regularLayout: some View {
+    #if os(iOS)
+    private var padLayout: some View {
+        splitLayout(columnMin: 260, columnIdeal: 300, wideAddSheet: false)
+    }
+    #endif
+
+    // MARK: - Mac
+
+    #if os(macOS)
+    private var macLayout: some View {
+        splitLayout(columnMin: 220, columnIdeal: 240, wideAddSheet: true)
+    }
+    #endif
+
+    private func splitLayout(columnMin: CGFloat, columnIdeal: CGFloat, wideAddSheet: Bool) -> some View {
         NavigationSplitView {
-            List(Section.allCases, selection: $selectedSection) { section in
-                Label(section.rawValue, systemImage: section.systemImage)
-                    .badge(badgeCount(for: section))
-                    .tag(section)
-                    .contentTransition(.numericText())
-                    .animation(.stashSpring, value: badgeCount(for: section))
+            List(selection: $selectedSection) {
+                SwiftUI.Section("Stash") {
+                    ForEach(stashSections) { section in
+                        sidebarRow(section)
+                    }
+                }
+                SwiftUI.Section("You") {
+                    ForEach(personalSections) { section in
+                        sidebarRow(section)
+                    }
+                }
             }
+            .listStyle(.sidebar)
             .navigationTitle("StashKeeper")
-            #if os(macOS)
-            .navigationSplitViewColumnWidth(min: 200, ideal: 230)
-            .scrollContentBackground(.hidden)
-            .background(.ultraThinMaterial)
-            #endif
+            .navigationSplitViewColumnWidth(min: columnMin, ideal: columnIdeal)
         } detail: {
             NavigationStack {
                 destinationView
                     .id(selectedSection)
-                    .transition(.opacity.combined(with: .scale(scale: 0.99)))
             }
-            .animation(.stashSpring, value: selectedSection)
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar {
@@ -178,43 +178,29 @@ struct RootView: View {
                     StashHaptics.impact()
                     showingAddItem = true
                 } label: {
-                    Label("Add Item", systemImage: "plus.circle.fill")
+                    Label("Add Item", systemImage: "plus")
                 }
+                #if os(iOS)
                 .keyboardShortcut("n", modifiers: .command)
-                #if os(macOS)
+                #endif
                 .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.circle)
-                #endif
             }
         }
-        .sheet(isPresented: $showingAddItem) {
-            AddItemFlowView()
-                #if os(macOS)
-                .frame(minWidth: 560, minHeight: 640)
-                #endif
-                .sheetPopIn()
-        }
-        .sheet(item: routedItemBinding) { item in
-            NavigationStack {
-                ItemDetailSheetWrapper(item: item)
-            }
-            .sheetPopIn()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
-            StashPendingRoute.showAddItem = false
-            showingAddItem = true
-        }
-        .onOpenURL(perform: handleOpenURL)
-        .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
-            StashPendingRoute.itemID = nil
-            if let id = notification.userInfo?["itemID"] as? UUID {
-                routedItemID = id
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
-            StashPendingRoute.showExpiring = false
-            selectedSection = .shopping
-        }
+        .rootRouting(
+            showingAddItem: $showingAddItem,
+            routedItem: routedItemBinding,
+            onOpenURL: handleOpenURL,
+            onShowShopping: { selectedSection = .shopping },
+            onFocusSearch: { selectedSection = .search },
+            onOpenItem: { routedItemID = $0 },
+            wideAddSheet: wideAddSheet
+        )
+    }
+
+    private func sidebarRow(_ section: Section) -> some View {
+        Label(section.label, systemImage: section.systemImage)
+            .badge(badgeCount(for: section))
+            .tag(section)
     }
 
     /// Bridges `routedItemID` (set when a notification is tapped) to a
@@ -283,6 +269,121 @@ struct RootView: View {
             StashPendingRoute.itemID = nil
             routedItemID = id
         }
+    }
+}
+
+private struct PhoneMoreView: View {
+    var body: some View {
+        List {
+            NavigationLink {
+                LocationsListView()
+            } label: {
+                Label("Locations", systemImage: "archivebox")
+            }
+            NavigationLink {
+                HouseholdView()
+            } label: {
+                Label("Household", systemImage: "person.2")
+            }
+            NavigationLink {
+                MilestonesView()
+            } label: {
+                Label("Milestones", systemImage: "rosette")
+            }
+            NavigationLink {
+                SettingsView()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+        }
+        .navigationTitle("More")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+    }
+}
+
+private struct PhoneAddToolbar: ViewModifier {
+    let add: () -> Void
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: add) {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel("Add Item")
+            }
+        }
+    }
+}
+
+private extension View {
+    func phoneAddToolbar(add: @escaping () -> Void) -> some View {
+        modifier(PhoneAddToolbar(add: add))
+    }
+
+    func rootRouting(
+        showingAddItem: Binding<Bool>,
+        routedItem: Binding<StashItem?>,
+        onOpenURL: @escaping (URL) -> Void,
+        onShowShopping: @escaping () -> Void,
+        onFocusSearch: @escaping () -> Void,
+        onOpenItem: @escaping (UUID) -> Void,
+        wideAddSheet: Bool = false
+    ) -> some View {
+        modifier(RootRouting(
+            showingAddItem: showingAddItem,
+            routedItem: routedItem,
+            onOpenURL: onOpenURL,
+            onShowShopping: onShowShopping,
+            onFocusSearch: onFocusSearch,
+            onOpenItem: onOpenItem,
+            wideAddSheet: wideAddSheet
+        ))
+    }
+}
+
+private struct RootRouting: ViewModifier {
+    @Binding var showingAddItem: Bool
+    @Binding var routedItem: StashItem?
+    let onOpenURL: (URL) -> Void
+    let onShowShopping: () -> Void
+    let onFocusSearch: () -> Void
+    let onOpenItem: (UUID) -> Void
+    var wideAddSheet = false
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showingAddItem) {
+                AddItemFlowView()
+                    .frame(minWidth: wideAddSheet ? 560 : nil, minHeight: wideAddSheet ? 640 : nil)
+                    .sheetPopIn()
+            }
+            .sheet(item: $routedItem) { item in
+                NavigationStack {
+                    ItemDetailSheetWrapper(item: item)
+                }
+                .sheetPopIn()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .requestNewItemFlow)) { _ in
+                StashPendingRoute.showAddItem = false
+                showingAddItem = true
+            }
+            .onOpenURL(perform: onOpenURL)
+            .onReceive(NotificationCenter.default.publisher(for: .openStashItem)) { notification in
+                StashPendingRoute.itemID = nil
+                if let id = notification.userInfo?["itemID"] as? UUID {
+                    onOpenItem(id)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showExpiringItems)) { _ in
+                StashPendingRoute.showExpiring = false
+                onShowShopping()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+                onFocusSearch()
+            }
     }
 }
 

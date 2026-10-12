@@ -34,6 +34,7 @@ struct StashKeeperApp: App {
         .modelContainer(modelContainer)
         #if os(macOS)
         .defaultSize(width: 1100, height: 720)
+        .windowToolbarStyle(.unified)
         .commands {
             SidebarCommands()
             CommandGroup(replacing: .newItem) {
@@ -42,7 +43,20 @@ struct StashKeeperApp: App {
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
+            CommandGroup(after: .newItem) {
+                Button("Find…") {
+                    NotificationCenter.default.post(name: .focusSearch, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
         }
+        #endif
+
+        #if os(macOS)
+        Settings {
+            SettingsView()
+        }
+        .modelContainer(modelContainer)
         #endif
 
         #if os(macOS)

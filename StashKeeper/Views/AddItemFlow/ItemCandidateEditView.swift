@@ -24,6 +24,8 @@ struct ItemCandidateEditView: View {
     var barcodeLookupSource: String?
     let recognizedText: [String]
     @Binding var ingredients: String
+    var nutritionFromPackage: Bool = false
+    @Binding var alternateNutrition: NutritionFacts?
 
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \StorageLocation.name) private var locations: [StorageLocation]
@@ -147,6 +149,13 @@ struct ItemCandidateEditView: View {
                 }
                 if analysis.hasUsableNutrition {
                     Section("Nutrition" + (analysis.nutrition.servingSize.isEmpty ? "" : " (per \(analysis.nutrition.servingSize))")) {
+                        if alternateNutrition != nil {
+                            Picker("Column", selection: nutritionColumn) {
+                                Text("Per 100 g").tag(NutritionBasis.per100Grams)
+                                Text("Per serving").tag(NutritionBasis.perServing)
+                            }
+                            .pickerStyle(.segmented)
+                        }
                         if analysis.nutrition.calories >= 0 {
                             nutritionRow("Calories", "\(analysis.nutrition.calories) kcal")
                         }
@@ -168,7 +177,9 @@ struct ItemCandidateEditView: View {
                         if analysis.nutrition.sodiumMilligrams >= 0 {
                             nutritionRow("Sodium", "\(formatted(analysis.nutrition.sodiumMilligrams))mg")
                         }
-                        Text("Estimated by Apple Intelligence — always check packaging for exact values.")
+                        Text(nutritionFromPackage
+                             ? "Read from the printed panel. Per 100 g stays selected until you choose the serving column."
+                             : "Estimated by Apple Intelligence — always check packaging for exact values.")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -218,6 +229,24 @@ struct ItemCandidateEditView: View {
                 }
             }
         }
+    }
+
+    private var nutritionColumn: Binding<NutritionBasis> {
+        Binding(
+            get: {
+                analysis.nutrition.servingSize.localizedCaseInsensitiveContains("100")
+                    ? .per100Grams
+                    : .perServing
+            },
+            set: { newBasis in
+                let showsPer100 = analysis.nutrition.servingSize.localizedCaseInsensitiveContains("100")
+                let selectingPer100 = newBasis == .per100Grams
+                guard showsPer100 != selectingPer100, let other = alternateNutrition else { return }
+                let current = analysis.nutrition
+                analysis.nutrition = other
+                alternateNutrition = current
+            }
+        )
     }
 
     private func nutritionRow(_ label: String, _ value: String) -> some View {

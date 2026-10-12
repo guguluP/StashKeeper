@@ -53,6 +53,16 @@
         }
       }
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ kcal / serving" : {
 
     },
@@ -61,6 +71,16 @@
     },
     "%@, already cataloged" : {
 
+    },
+    "%@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@"
+          }
+        }
+      }
     },
     "%lld" : {
 
@@ -125,7 +145,19 @@
     "Add" : {
 
     },
+    "Add %@" : {
+
+    },
     "Add ${quantity} ${name} to ${locationName}" : {
+
+    },
+    "Add ${quantity} ${name} to the buy list" : {
+
+    },
+    "Add a Grocery to Buy" : {
+
+    },
+    "Add every named line" : {
 
     },
     "Add Item" : {
@@ -163,7 +195,26 @@
     "Add some fresh produce or pantry items to get recipe suggestions." : {
 
     },
+    "Add something to buy" : {
+
+    },
+    "Add to buy list" : {
+
+    },
+    "Added %lld %@ to your buy list." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Added %1$lld %2$@ to your buy list."
+          }
+        }
+      }
+    },
     "Adds a basic item to your stash by name, e.g. 'Add batteries to StashKeeper'. For photo-based recognition, open the app instead." : {
+
+    },
+    "Adds something to the StashKeeper buy list, for example milk." : {
 
     },
     "AI estimate — please confirm" : {
@@ -254,6 +305,22 @@
     "Barcodes with no match: %@" : {
 
     },
+    "Bought" : {
+
+    },
+    "Buy %lld · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Buy %1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "Buy %lld more to reach the amount you keep." : {
+
+    },
     "Camera access is needed to take photos" : {
 
     },
@@ -261,6 +328,7 @@
 
     },
     "Catalog %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -271,6 +339,15 @@
       }
     },
     "Category" : {
+
+    },
+    "Check off %@" : {
+
+    },
+    "Checked items stay off this list until their expiry date changes." : {
+
+    },
+    "Checking catalogs…" : {
 
     },
     "Checking your stash for ideas…" : {
@@ -322,6 +399,9 @@
         }
       }
     },
+    "Column" : {
+
+    },
     "Cook" : {
       "localizations" : {
         "en" : {
@@ -336,6 +416,9 @@
 
     },
     "Couldn't identify any purchased items on this receipt. You can still add items normally from the Dashboard." : {
+
+    },
+    "Couldn't reach a database" : {
 
     },
     "Currency" : {
@@ -363,6 +446,9 @@
 
     },
     "Detected from price tag in photo" : {
+
+    },
+    "Devices signed into this iCloud account share the stash when iCloud is enabled for StashKeeper. A file is still how you hand a copy to someone else. Photos stay on the device that took them. Quantity changes record the household name from Settings." : {
 
     },
     "Done" : {
@@ -393,6 +479,9 @@
     "Expired" : {
 
     },
+    "Expiry" : {
+
+    },
     "Expiry Date" : {
 
     },
@@ -421,6 +510,9 @@
     "Find Item" : {
 
     },
+    "Find…" : {
+
+    },
     "Finds where an item is stored, e.g. 'Where is my passport?'" : {
 
     },
@@ -428,6 +520,28 @@
 
     },
     "From your receipt scan. Take a photo of the actual item so it can be cataloged with an accurate name, category, and expiry." : {
+
+    },
+    "Groceries to Buy" : {
+
+    },
+    "Grocery" : {
+
+    },
+    "Grocery to Buy" : {
+
+    },
+    "Have %lld, keep %lld. Buy %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Have %1$lld, keep %2$lld. Buy %3$lld."
+          }
+        }
+      }
+    },
+    "Hide checked" : {
 
     },
     "Hide recipe" : {
@@ -444,6 +558,9 @@
       }
     },
     "Home" : {
+
+    },
+    "Household" : {
 
     },
     "How Many" : {
@@ -473,10 +590,16 @@
     "Icon" : {
 
     },
+    "Import a household file" : {
+
+    },
     "Import inventory JSON" : {
 
     },
     "Ingredients" : {
+
+    },
+    "Inside" : {
 
     },
     "Item" : {
@@ -494,7 +617,10 @@
     "Items by Location" : {
 
     },
-    "Lay the bill flat and capture the whole thing in good light. Apple Intelligence will pull out each purchased item so you can catalog them one by one." : {
+    "Keep at least: %lld" : {
+
+    },
+    "Lay the bill flat and capture the whole thing in good light. Named lines are added to your stash. Photograph a line only when the receipt could not name it." : {
 
     },
     "List Items by Category" : {
@@ -504,6 +630,9 @@
 
     },
     "List my ${category} items" : {
+
+    },
+    "Lists groceries to buy: items below the amount you keep, plus anything added to the buy list. Shortcuts can pass this list to Reminders or another app." : {
 
     },
     "Lists items in a category, e.g. 'What electronics do I have stored?'" : {
@@ -537,10 +666,28 @@
         }
       }
     },
+    "Look up" : {
+
+    },
     "Low confidence — please double check" : {
 
     },
+    "Mark %@ as still needed" : {
+
+    },
+    "Mark ${grocery} as bought" : {
+
+    },
+    "Mark a Grocery as Bought" : {
+
+    },
+    "Marked %@ as bought." : {
+
+    },
     "Matched via %@" : {
+
+    },
+    "Me" : {
 
     },
     "Message" : {
@@ -567,6 +714,7 @@
       }
     },
     "Misses" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -575,6 +723,9 @@
           }
         }
       }
+    },
+    "More" : {
+
     },
     "Name" : {
 
@@ -601,6 +752,9 @@
     "Nice!" : {
 
     },
+    "No catalog has this code. Type the name to save it, or photograph the package." : {
+
+    },
     "No Ideas Right Now" : {
 
     },
@@ -608,9 +762,6 @@
 
     },
     "No Items Found" : {
-
-    },
-    "No items yet" : {
 
     },
     "No Locations Yet" : {
@@ -622,7 +773,11 @@
     "No online match found" : {
 
     },
+    "No scans recorded yet. Each barcode lookup is kept on this device so you can see whether a miss is a real gap or a failed request." : {
+
+    },
     "No scans recorded yet. Each barcode lookup is kept on this device so you can see whether misses come from the product databases." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -638,6 +793,9 @@
     "None of your items have a recorded price yet." : {
 
     },
+    "Not in a database" : {
+
+    },
     "Notes" : {
 
     },
@@ -647,7 +805,19 @@
     "Nothing is expiring soon. You're all caught up." : {
 
     },
+    "Nothing is expiring." : {
+
+    },
+    "Nothing is saved yet. These samples show what each path looks like. Tap one to do it for real." : {
+
+    },
     "Nothing Kept Here Yet" : {
+
+    },
+    "Nothing left. Delete the item when you are done with it." : {
+
+    },
+    "Nothing to buy." : {
 
     },
     "Notifications: %@" : {
@@ -683,6 +853,15 @@
     "Or create new location" : {
 
     },
+    "packets, kg, boxes" : {
+
+    },
+    "Per 100 g" : {
+
+    },
+    "Per serving" : {
+
+    },
     "Perishability" : {
 
     },
@@ -699,7 +878,13 @@
         }
       }
     },
-    "Photograph a fridge shelf, pantry, or receipt. Apple Intelligence names each item and watches expiry." : {
+    "Photograph the package" : {
+
+    },
+    "Photograph this line" : {
+
+    },
+    "Photograph unnamed line" : {
 
     },
     "Photograph your receipt" : {
@@ -709,6 +894,15 @@
 
     },
     "Photos are not inside the JSON; they stay in this device's photo store." : {
+
+    },
+    "Place" : {
+
+    },
+    "Point the camera at the barcode. A known product saves from here." : {
+
+    },
+    "Prepare stash file" : {
 
     },
     "Price" : {
@@ -740,6 +934,9 @@
 
     },
     "Quit" : {
+
+    },
+    "Read from the printed panel. Per 100 g stays selected until you choose the serving column." : {
 
     },
     "Reading your receipt…" : {
@@ -780,10 +977,29 @@
     "Reminders, backup, and how soon we warn you before food goes off." : {
 
     },
+    "Removes a grocery from the buy list, or restocks a kept item up to the amount you keep." : {
+
+    },
     "Request notification access" : {
 
     },
+    "Restocked %@ to %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restocked %1$@ to %2$lld."
+          }
+        }
+      }
+    },
     "Save (%lld)" : {
+
+    },
+    "Save to stash" : {
+
+    },
+    "Scan Barcode" : {
 
     },
     "Scan Receipt" : {
@@ -805,6 +1021,9 @@
         }
       }
     },
+    "Send your stash to someone else as a file. Import adds new items and places, and updates items that share an id. Photos already on this device stay here." : {
+
+    },
     "Sending" : {
       "localizations" : {
         "en" : {
@@ -825,16 +1044,37 @@
         }
       }
     },
+    "Share" : {
+
+    },
+    "Shopping" : {
+
+    },
+    "Show checked" : {
+
+    },
     "Show Expiring Items" : {
 
     },
     "Show recipe" : {
 
     },
+    "Show the buy list in Reminders" : {
+
+    },
+    "Siri can ask what groceries you need. When this is on, the same list is a Reminders list named StashKeeper Groceries, so Reminders and other apps can use it." : {
+
+    },
     "Sort" : {
 
     },
     "Start adding items to unlock achievements for each category." : {
+
+    },
+    "Start with one of these" : {
+
+    },
+    "Stash" : {
 
     },
     "Stash Assistant" : {
@@ -884,6 +1124,9 @@
     "Tap a box to include/exclude it. Tap the pencil to edit details. Dashed purple boxes were merged as another angle of a nearby photo's item — tap to split them back out." : {
 
     },
+    "Tell me the name of the grocery to add." : {
+
+    },
     "Tells you how many of a given item you have in your stash, e.g. 'How many AA batteries do I have?'" : {
 
     },
@@ -891,6 +1134,9 @@
 
     },
     "Text Found on Item" : {
+
+    },
+    "That grocery is no longer on the buy list." : {
 
     },
     "That item is no longer in your stash." : {
@@ -906,6 +1152,15 @@
 
     },
     "This item is perishable" : {
+
+    },
+    "This lot has an expiry date" : {
+
+    },
+    "This name is stored on each quantity change, so another device on this iCloud account can see who used an item." : {
+
+    },
+    "To buy" : {
 
     },
     "Today" : {
@@ -929,6 +1184,12 @@
     "Try Again" : {
 
     },
+    "Type a barcode" : {
+
+    },
+    "Unit" : {
+
+    },
     "Update existing (+%lld)" : {
 
     },
@@ -945,7 +1206,16 @@
     "Use One" : {
 
     },
+    "Use or replace" : {
+
+    },
+    "Use soon is what is expiring. To buy is what you are below the amount you keep, plus anything you add here." : {
+
+    },
     "Used 1" : {
+
+    },
+    "Used one" : {
 
     },
     "Used one %@. %lld left." : {
@@ -964,6 +1234,9 @@
     "Warn me" : {
 
     },
+    "What Groceries Do I Need" : {
+
+    },
     "What's Expiring" : {
 
     },
@@ -973,7 +1246,16 @@
     "What's in ${location}" : {
 
     },
+    "You" : {
+
+    },
+    "You don't need to buy any groceries right now." : {
+
+    },
     "You said %@" : {
+
+    },
+    "Your name" : {
 
     },
     "Your stash, your rules" : {

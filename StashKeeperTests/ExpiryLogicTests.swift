@@ -159,6 +159,74 @@ struct ExpiryLogicTests {
         #expect(name == "Nestlé Maggi 70 g")
     }
 
+    @Test func wrapperNameFillsAThinCatalogTitle() {
+        let catalog = LookedUpProduct(
+            name: "Nestlé Maggi 70 g",
+            brand: "Nestlé",
+            category: "Pantry & Food",
+            rawNutritionText: nil,
+            imageURL: nil,
+            source: "Open Food Facts"
+        )
+        let printed = LookedUpProduct(
+            name: "Maggi 2-Minute Noodles Masala",
+            brand: nil,
+            category: "Pantry & Food",
+            rawNutritionText: nil,
+            imageURL: nil,
+            source: PackageLabelReader.packageSource
+        )
+        let merged = PackageLabelReader.merge(catalog: catalog, printed: printed)
+        #expect(merged.name == "Maggi 2-Minute Noodles Masala")
+        #expect(merged.source == "Open Food Facts and the package")
+        #expect(merged.brand == "Nestlé")
+
+        let fullerCatalog = PackageLabelReader.preferredName(
+            catalog: "Cadbury Dairy Milk Silk",
+            printed: "Cadbury Dairy"
+        )
+        #expect(fullerCatalog == "Cadbury Dairy Milk Silk")
+    }
+
+    @Test func confirmedPackageIsRememberedFromTheWrapper() async throws {
+        let suite = "StashKeeperCache-\(UUID().uuidString)"
+        let cache = IndianFMCGBarcodeCache.makeForTests(suite: suite)
+        defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+        await cache.learn(ConfirmedPackage(
+            barcode: "8909990000001",
+            name: "Cadbury Dairy Milk Silk",
+            category: "Pantry & Food",
+            nutrition: NutritionFacts(
+                servingSize: "100 g",
+                calories: 412,
+                proteinGrams: 7.6,
+                carbsGrams: 56.1,
+                sugarGrams: 24.2,
+                fatGrams: 19.4,
+                fiberGrams: 3.1,
+                sodiumMilligrams: 96
+            ),
+            ingredients: "Sugar, Cocoa",
+            wrapperTokens: ["cadbury", "dairy", "silk"]
+        ))
+        let again = await cache.learned(barcode: "8909990000001")
+        #expect(again?.name == "Cadbury Dairy Milk Silk")
+        #expect(again?.nutrition?.calories == 412)
+        #expect(again?.ingredients == "Sugar, Cocoa")
+
+        let lines = [
+            OCRLine(text: "CADBURY", confidence: 0.95, boundingBox: CGRect(x: 0.1, y: 0.7, width: 0.5, height: 0.12)),
+            OCRLine(text: "Dairy Silk", confidence: 0.9, boundingBox: CGRect(x: 0.1, y: 0.55, width: 0.5, height: 0.1)),
+        ]
+        let matched = await cache.match(lines: lines)
+        #expect(matched?.name == "Cadbury Dairy Milk Silk")
+
+        let other = [
+            OCRLine(text: "Britannia Marie", confidence: 0.9, boundingBox: CGRect(x: 0.1, y: 0.6, width: 0.5, height: 0.1)),
+        ]
+        #expect(await cache.match(lines: other) == nil)
+    }
+
     @Test func packageReadNamesAChocolateWhenTheDatabaseMisses() {
         let lines = [
             OCRLine(text: "CADBURY", confidence: 0.92, boundingBox: CGRect(x: 0.1, y: 0.72, width: 0.6, height: 0.12)),

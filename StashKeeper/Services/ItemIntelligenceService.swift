@@ -919,6 +919,16 @@ final class ItemIntelligenceService {
               from the package, the large words on the wrapper are the
               product name. Do not replace a printed name such as
               "Cadbury Dairy Milk Silk" with a generic "Chocolate".
+            - Nutrition panels often have two columns, per 100 g and per
+              serving. Record the per 100 g figures. Use the per-serving
+              column only when the panel has no per 100 g column. Do not
+              add or average the two columns. Hindi nutrient names are
+              ऊर्जा or कैलोरी, प्रोटीन, वसा, कार्बोहाइड्रेट, शर्करा,
+              फाइबर or रेशा, and सोडियम. Leave nutrition numbers at -1 for
+              a packaged item when no panel and no product lookup is present.
+            - A printed Best before, Use by, or EXP date is the expiry.
+              Indian dates are day/month/year. Set expiryConfidence to 0.9
+              or higher only for that printed date.
             - Dairy products like milk, curd/dahi, paneer, and ghee are
               common and perishable with short shelf lives unless UHT/ghee.
             - Reading product names from OCR text: prefer the largest,

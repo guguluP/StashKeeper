@@ -54,7 +54,82 @@ nonisolated enum PackageLabelReader {
             category: category(for: name, lines: lines),
             rawNutritionText: nil,
             imageURL: nil,
-            source: packageSource
+            source: packageSource,
+            wrapperTokens: signature(from: lines)
+        )
+    }
+
+    /// A catalog title and the words on the wrapper. A learned name stays.
+    /// A printed name replaces the catalog title when the wrapper states a
+    /// longer product name that still shares a word with the catalog.
+    static func merge(catalog: LookedUpProduct, printed: LookedUpProduct) -> LookedUpProduct {
+        let name = catalog.source == "Learned on this device"
+            ? catalog.name
+            : preferredName(catalog: catalog.name, printed: printed.name)
+        let usedPrinted = name == printed.name && name != catalog.name
+        return LookedUpProduct(
+            name: name,
+            brand: catalog.brand,
+            category: catalog.category ?? printed.category,
+            rawNutritionText: catalog.rawNutritionText,
+            imageURL: catalog.imageURL,
+            source: usedPrinted ? "\(catalog.source) and the package" : catalog.source,
+            nutrition: catalog.nutrition,
+            ingredients: catalog.ingredients,
+            wrapperTokens: printed.wrapperTokens
+        )
+    }
+
+    static func preferredName(catalog: String, printed: String) -> String {
+        let catalogTokens = nameTokens(catalog)
+        let printedTokens = nameTokens(printed)
+        guard !printedTokens.isEmpty else { return catalog }
+        guard !catalogTokens.isEmpty else { return printed }
+        if printedTokens.isSubset(of: catalogTokens) { return catalog }
+        if catalogTokens.isSubset(of: printedTokens) { return printed }
+        let extra = printedTokens.subtracting(catalogTokens)
+        if !catalogTokens.intersection(printedTokens).isEmpty, extra.count >= 2 {
+            return printed
+        }
+        return catalog
+    }
+
+    /// Distinctive wrapper words used to recognize a pack the household
+    /// already confirmed, even when the next photo misses the barcode.
+    static func signature(from lines: [OCRLine]) -> [String] {
+        let ranked = lines
+            .filter { !isNoise($0.text, barcode: nil) }
+            .sorted { $0.relativeHeight > $1.relativeHeight }
+            .prefix(4)
+        return signature(fromTexts: ranked.map(\.text))
+    }
+
+    static func signature(fromTexts texts: [String]) -> [String] {
+        var tokens: [String] = []
+        var seen = Set<String>()
+        for text in texts {
+            for raw in text.split(whereSeparator: { !$0.isLetter }) {
+                let token = String(raw).folding(options: .diacriticInsensitive, locale: .current).lowercased()
+                guard token.count >= 4, !genericSignatureTokens.contains(token), seen.insert(token).inserted else { continue }
+                tokens.append(token)
+                if tokens.count == 4 { return tokens }
+            }
+        }
+        return tokens
+    }
+
+    private static let genericSignatureTokens: Set<String> = [
+        "milk", "biscuit", "biscuits", "cookie", "cookies", "chocolate", "snack", "snacks",
+        "noodle", "noodles", "masala", "cream", "butter", "sugar", "wheat", "flour",
+        "pack", "india", "limited", "foods", "food", "fresh", "original", "classic",
+        "with", "from", "made", "best", "weight", "grams", "good"
+    ]
+
+    private static func nameTokens(_ text: String) -> Set<String> {
+        Set(
+            text.split(whereSeparator: { !$0.isLetter })
+                .map { String($0).lowercased() }
+                .filter { $0.count >= 3 }
         )
     }
 

@@ -26,6 +26,7 @@ struct BarcodeQuickAddView: View {
     @State private var expiry = Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? .now
     @State private var location: StorageLocation?
     @State private var lookupSource: String?
+    @State private var remembered: LookedUpProduct?
     @State private var isLookingUp = false
     @State private var unknownCode = false
     @State private var status: String?
@@ -126,11 +127,13 @@ struct BarcodeQuickAddView: View {
                 category = ItemAnalysis.categoryOptions.contains(productCategory) ? productCategory : "Pantry & Food"
             }
             lookupSource = product.source
+            remembered = product
             unknownCode = false
             status = nil
         } else {
             name = ""
             lookupSource = nil
+            remembered = nil
             unknownCode = true
             status = nil
         }
@@ -156,6 +159,7 @@ struct BarcodeQuickAddView: View {
             await StashItemLifecycle.afterEdit(existing, in: modelContext)
             status = "Added \(quantity) to the existing lot of \(existing.name)."
         } else {
+            let sameProduct = remembered?.name == cleanedName
             let item = StashItem(
                 name: cleanedName,
                 category: category,
@@ -164,7 +168,9 @@ struct BarcodeQuickAddView: View {
                 expiryDate: expiryDate,
                 location: location,
                 barcodePayload: code,
-                barcodeLookupSource: lookupSource
+                barcodeLookupSource: lookupSource,
+                nutrition: sameProduct ? remembered?.nutrition : nil,
+                ingredients: sameProduct ? remembered?.ingredients : nil
             )
             item.noteChange("added \(quantity)")
             modelContext.insert(item)
@@ -172,7 +178,15 @@ struct BarcodeQuickAddView: View {
             await StashItemLifecycle.afterEdit(item, in: modelContext)
             status = "Saved \(cleanedName)."
         }
-        await IndianFMCGBarcodeCache.shared.learn(barcode: code, name: cleanedName, category: category)
+        let sameProduct = remembered?.name == cleanedName
+        await IndianFMCGBarcodeCache.shared.learn(ConfirmedPackage(
+            barcode: code,
+            name: cleanedName,
+            category: category,
+            nutrition: sameProduct ? remembered?.nutrition : nil,
+            ingredients: sameProduct ? remembered?.ingredients : nil,
+            wrapperTokens: remembered?.wrapperTokens ?? []
+        ))
         StashHaptics.success()
         scannedCode = nil
         name = ""

@@ -92,6 +92,10 @@ struct AddItemFlowView: View {
     @State private var barcodeByCandidate: [UUID: String?] = [:]
     @State private var barcodeSourceByCandidate: [UUID: String?] = [:]
     @State private var ingredientsByCandidate: [UUID: String] = [:]
+    /// Printed per-serving column, kept so the review screen can switch
+    /// off the default per-100 g figures.
+    @State private var alternateNutritionByCandidate: [UUID: NutritionFacts] = [:]
+    @State private var nutritionFromPackageByCandidate: [UUID: Bool] = [:]
     /// Flattened OCR text per candidate, kept around so the cross-photo
     /// duplicate/angle detection pass and the item detail "Text Found on
     /// Item" section can reference it without re-running Vision.
@@ -320,6 +324,11 @@ struct AddItemFlowView: View {
                         priceHints: PriceHintExtractor.extractPriceHints(from: region.recognizedText)
                     )
 
+                    let labelLines = PackageLabelReader.lines(
+                        region: region.recognizedText,
+                        regionBox: region.normalizedBoundingBox,
+                        global: observations.globalRecognizedText
+                    )
                     if let nearestBarcode = await barcodeScanner.nearestBarcode(
                         to: region.normalizedBoundingBox, in: barcodes
                     ) {
@@ -335,24 +344,27 @@ struct AddItemFlowView: View {
                         input.lookedUpProduct = await productLookupService.lookup(barcode: nearestBarcode.payload)
                     }
 
-                    if input.lookedUpProduct == nil {
-                        let labelLines = PackageLabelReader.lines(
-                            region: region.recognizedText,
-                            regionBox: region.normalizedBoundingBox,
-                            global: observations.globalRecognizedText
-                        )
-                        if let fromPackage = PackageLabelReader.product(
-                            from: labelLines,
-                            barcode: input.barcodePayload
-                        ) {
+                    let fromPackage = PackageLabelReader.product(
+                        from: labelLines,
+                        barcode: input.barcodePayload
+                    )
+                    if let catalog = input.lookedUpProduct, let fromPackage {
+                        input.lookedUpProduct = PackageLabelReader.merge(catalog: catalog, printed: fromPackage)
+                    } else if input.lookedUpProduct == nil {
+                        if let fromPackage {
                             input.lookedUpProduct = fromPackage
-                            stage = .analyzing(progress: "Reading the package…")
-                            await StashScanActivityController.shared.update(
-                                message: "Reading the package…",
-                                fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.6),
-                                itemsFoundSoFar: totalItemsFoundSoFar
-                            )
+                        } else {
+                            input.lookedUpProduct = await IndianFMCGBarcodeCache.shared.match(lines: labelLines)
                         }
+                    }
+                    if input.lookedUpProduct?.source == PackageLabelReader.packageSource
+                        || input.lookedUpProduct?.source == "Learned on this device" {
+                        stage = .analyzing(progress: "Reading the package…")
+                        await StashScanActivityController.shared.update(
+                            message: "Reading the package…",
+                            fraction: StashScanActivityController.scanFraction(photoIndex: index, total: imageDatas.count, stage: 0.6),
+                            itemsFoundSoFar: totalItemsFoundSoFar
+                        )
                     }
 
                     regionInputs.append(input)
@@ -394,10 +406,29 @@ struct AddItemFlowView: View {
                 for (index2, (region, rawAnalysis)) in zip(observations.regions, analyses).enumerated() {
                     let input = regionInputs[index2]
                     var analysis = rawAnalysis
+                    if let product = input.lookedUpProduct {
+                        analysis.name = product.name
+                        if let category = product.category, itemCategoryOptions.contains(category) {
+                            analysis.category = category
+                        }
+                        if let facts = product.nutrition, facts.calories >= 0 || facts.proteinGrams >= 0 || facts.carbsGrams >= 0 {
+                            analysis.nutrition = facts
+                        }
+                        if let ingredients = product.ingredients, !ingredients.isEmpty {
+                            ingredientsByCandidate[region.id] = ingredients
+                        }
+                    }
                     let labelText = (region.recognizedText + observations.globalRecognizedText).map(\.text)
                     if let label = NutritionLabelReader.read(labelText) {
+                        // The printed panel wins. Per 100 g is the column
+                        // that is kept. The serving column stays available
+                        // on the review screen.
                         if label.nutrientCount >= 2 {
                             analysis.nutrition = label.nutrition
+                            nutritionFromPackageByCandidate[region.id] = true
+                            if let alternate = label.alternate {
+                                alternateNutritionByCandidate[region.id] = alternate
+                            }
                         }
                         if !label.ingredients.isEmpty {
                             ingredientsByCandidate[region.id] = label.ingredients
@@ -788,6 +819,11 @@ struct AddItemFlowView: View {
             ingredients: Binding(
                 get: { ingredientsByCandidate[candidateID] ?? "" },
                 set: { ingredientsByCandidate[candidateID] = $0 }
+            ),
+            nutritionFromPackage: nutritionFromPackageByCandidate[candidateID] == true,
+            alternateNutrition: Binding(
+                get: { alternateNutritionByCandidate[candidateID] },
+                set: { alternateNutritionByCandidate[candidateID] = $0 }
             )
         ))
     }
@@ -969,14 +1005,19 @@ struct AddItemFlowView: View {
         // local Indian FMCG cache so re-scanning the same item resolves
         // instantly next time instead of repeating the same round trip
         // and coming up empty again.
-        let lookupSource: String? = barcodeSourceByCandidate[candidate.id] ?? nil
-        let learnedFromPackage = lookupSource == nil || lookupSource == PackageLabelReader.packageSource
-        if let payload = barcodeByCandidate[candidate.id] ?? nil, !payload.isEmpty,
-           learnedFromPackage {
+        let payload = barcodeByCandidate[candidate.id] ?? nil
+        let wrapperTokens = PackageLabelReader.signature(fromTexts: recognizedTextByCandidate[candidate.id] ?? [])
+        if (payload?.isEmpty == false) || wrapperTokens.count >= 2 {
+            let nutrition = analysis.hasUsableNutrition ? analysis.nutrition : nil
             Task {
-                await IndianFMCGBarcodeCache.shared.learn(
-                    barcode: payload, name: item.name, category: item.category
-                )
+                await IndianFMCGBarcodeCache.shared.learn(ConfirmedPackage(
+                    barcode: payload,
+                    name: item.name,
+                    category: item.category,
+                    nutrition: nutrition,
+                    ingredients: item.ingredients,
+                    wrapperTokens: wrapperTokens
+                ))
             }
         }
 
