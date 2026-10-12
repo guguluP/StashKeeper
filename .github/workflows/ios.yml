@@ -4,19 +4,18 @@ on:
   pull_request:
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: xcode-27
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Select Xcode
         run: |
-          if [ -d /Applications/Xcode_26.5.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.5.app
-          elif [ -d /Applications/Xcode_26.4.1.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.4.1.app
+          if [ -d /Applications/Xcode_27.app ]; then
+            sudo xcode-select -s /Applications/Xcode_27.app
           elif [ -d /Applications/Xcode.app ]; then
             sudo xcode-select -s /Applications/Xcode.app
           fi
           xcodebuild -version
+          xcodebuild -downloadComponent MetalToolchain
       - name: Build and test
         run: |
           set -euo pipefail

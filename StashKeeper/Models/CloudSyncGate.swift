@@ -9,18 +9,11 @@
 //
 
 import Foundation
-import Security
 
 enum CloudSyncGate {
     static let containerID = "iCloud.com.piyushpatnaik.StashKeeper"
 
     static var isEntitled: Bool {
-        guard let task = SecTaskCreateFromSelf(nil) else { return false }
-        let value = SecTaskCopyValueForEntitlement(
-            task,
-            "com.apple.developer.icloud-services" as CFString,
-            nil
-        )
-        return value != nil
+        FileManager.default.ubiquityIdentityToken != nil
     }
 }

@@ -14,7 +14,7 @@
 
 import Foundation
 #if os(iOS)
-import ActivityKit
+@preconcurrency import ActivityKit
 #endif
 
 @MainActor

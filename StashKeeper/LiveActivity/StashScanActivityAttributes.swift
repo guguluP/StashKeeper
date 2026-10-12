@@ -18,7 +18,7 @@ import Foundation
 #if os(iOS)
 import ActivityKit
 
-struct StashScanActivityAttributes: ActivityAttributes {
+nonisolated struct StashScanActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         var progressMessage: String
         var fractionComplete: Double

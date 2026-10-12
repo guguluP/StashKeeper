@@ -82,7 +82,18 @@ enum SharedModelConfiguration {
         ModelConfiguration(schema: sharedSchema, groupContainer: .none)
     }
 
+    /// True when the process is hosting XCTest / Swift Testing. Unit tests
+    /// run unsigned in CI, so the App Group and iCloud stores are skipped.
+    nonisolated static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
     static func makeContainer() -> ModelContainer {
+        if isRunningTests, let container = tryCreate(
+            ModelConfiguration(schema: sharedSchema, isStoredInMemoryOnly: true)
+        ) {
+            return container
+        }
         // Only the app may move an unreadable store aside. A widget refresh
         // that loses a lock must not relocate the file the app has open.
         let mayReplace = Bundle.main.bundleURL.pathExtension != "appex"
